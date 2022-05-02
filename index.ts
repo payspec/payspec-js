@@ -21,38 +21,34 @@ export interface PayspecInvoice {
 }
 
 
-export const PayspecJS = {
+export const ETH_ADDRESS = "0x0000000000000000000000000000000000000010" 
+
+
+  export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
+{
+  var payspecContractAddress = invoiceData.payspecContractAddress;
+  var description = invoiceData.description;
+  var nonce =invoiceData.nonce;
+  var token =invoiceData.token;
+  var amountDue =invoiceData.amountDue;
+  var payTo =invoiceData.payTo;
+
+  var feeAddresses = {t: 'address[]' , v:invoiceData.feeAddresses}
+  var feePercents = {t: 'uint[]' , v:invoiceData.feePercents}
+  var expiresAt =invoiceData.expiresAt;
 
 
 
-    getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
-   {
-     var payspecContractAddress = invoiceData.payspecContractAddress;
-     var description = invoiceData.description;
-     var nonce =invoiceData.nonce;
-     var token =invoiceData.token;
-     var amountDue =invoiceData.amountDue;
-     var payTo =invoiceData.payTo;
-
-     var feeAddresses = {t: 'address[]' , v:invoiceData.feeAddresses}
-     var feePercents = {t: 'uint[]' , v:invoiceData.feePercents}
-     var expiresAt =invoiceData.expiresAt;
-
-
-
-      
-     return web3utils.soliditySha3(
-       payspecContractAddress,
-       description,
-         // @ts-ignore
-       nonce,
-       token,
-       amountDue,
-       payTo,
-       feeAddresses,
-       feePercents,
-       expiresAt );
-   }
-
-
-}
+    
+  return web3utils.soliditySha3(
+    payspecContractAddress,
+    description,
+      // @ts-ignore
+    nonce,
+    token,
+    amountDue,
+    payTo,
+    feeAddresses,
+    feePercents,
+    expiresAt );
+} 
