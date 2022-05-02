@@ -1,7 +1,7 @@
 {
-  "name": "mini-route-loader",
-  "version": "0.22.0",
-  "description": "Load routes to controllers for Express",
+  "name": "payspec-js",
+  "version": "0.10.0",
+  "description": "Library for Web3 Payments Protocol",
   "main": "dist/index.js",
   "scripts": {
     "test": "NODE_ENV=test TS_NODE_PROJECT=\"tsconfig.testing.json\" mocha --require ts-node/register 'test/**/*.ts' --timeout 25000",
