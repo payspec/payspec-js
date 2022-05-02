@@ -40,9 +40,11 @@ export const PayspecJS = {
 
 
 
+      
      return web3utils.soliditySha3(
        payspecContractAddress,
        description,
+         // @ts-ignore
        nonce,
        token,
        amountDue,
