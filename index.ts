@@ -14,8 +14,8 @@ export interface PayspecInvoice {
   token: string,
   amountDue: BigNumber,
   payTo: string,
-  feeAddresses: Array<string>,
-  feePercents: Array<number>,
+  feeAddressesArrayStringified: string, //Array<string>, // use JSON.stringify and JSON.parse
+  feePercentsArrayStringified: string, //Array<number>, // use JSON.stringify and JSON.parse
   expiresAt: number,
   invoiceUUID?: string 
 
@@ -34,12 +34,14 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
   var amountDue =invoiceData.amountDue;
   var payTo =invoiceData.payTo;
 
-  var feeAddresses = {t: 'address[]' , v:invoiceData.feeAddresses}
-  var feePercents = {t: 'uint[]' , v:invoiceData.feePercents}
+  let feeAddressesArray = JSON.parse(invoiceData.feeAddressesArrayStringified)
+  let feePercentsArray = JSON.parse(invoiceData.feePercentsArrayStringified)
+
+  var feeAddresses = {t: 'address[]' , v:feeAddressesArray}
+  var feePercents = {t: 'uint[]' , v:feePercentsArray}
   var expiresAt =invoiceData.expiresAt;
 
-
-
+ 
     
   return web3utils.soliditySha3(
     payspecContractAddress,

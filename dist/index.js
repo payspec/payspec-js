@@ -13,8 +13,10 @@ function getPayspecInvoiceUUID(invoiceData) {
     var token = invoiceData.token;
     var amountDue = invoiceData.amountDue;
     var payTo = invoiceData.payTo;
-    var feeAddresses = { t: 'address[]', v: invoiceData.feeAddresses };
-    var feePercents = { t: 'uint[]', v: invoiceData.feePercents };
+    let feeAddressesArray = JSON.parse(invoiceData.feeAddressesArrayStringified);
+    let feePercentsArray = JSON.parse(invoiceData.feePercentsArrayStringified);
+    var feeAddresses = { t: 'address[]', v: feeAddressesArray };
+    var feePercents = { t: 'uint[]', v: feePercentsArray };
     var expiresAt = invoiceData.expiresAt;
     return web3_utils_1.default.soliditySha3(payspecContractAddress, description, 
     // @ts-ignore
