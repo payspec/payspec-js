@@ -16,7 +16,8 @@ export interface PayspecInvoice {
   payTo: string,
   feeAddresses: Array<string>,
   feePercents: Array<number>,
-  expiresAt: number
+  expiresAt: number,
+  invoiceUUID?: string 
 
 }
 
@@ -24,7 +25,7 @@ export interface PayspecInvoice {
 export const ETH_ADDRESS = "0x0000000000000000000000000000000000000010" 
 
 
-  export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
+export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
 {
   var payspecContractAddress = invoiceData.payspecContractAddress;
   var description = invoiceData.description;
@@ -52,3 +53,11 @@ export const ETH_ADDRESS = "0x0000000000000000000000000000000000000010"
     feePercents,
     expiresAt );
 } 
+
+
+export function generateInvoiceUUID(invoiceData: PayspecInvoice) : PayspecInvoice {
+
+  return Object.assign(invoiceData, {invoiceUUID: getPayspecInvoiceUUID(invoiceData)})
+
+  
+}

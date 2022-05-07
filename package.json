@@ -1,6 +1,6 @@
 {
   "name": "payspec-js",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Library for Web3 Payments Protocol",
   "main": "dist/index.js",
   "scripts": {
