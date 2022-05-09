@@ -4,14 +4,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateInvoiceUUID = exports.getPayspecInvoiceUUID = exports.ETH_ADDRESS = void 0;
+const ethers_1 = require("ethers");
 const web3_utils_1 = __importDefault(require("web3-utils"));
 exports.ETH_ADDRESS = "0x0000000000000000000000000000000000000010";
 function getPayspecInvoiceUUID(invoiceData) {
     var payspecContractAddress = invoiceData.payspecContractAddress;
     var description = invoiceData.description;
-    var nonce = invoiceData.nonce;
+    var nonce = ethers_1.BigNumber.from(invoiceData.nonce);
     var token = invoiceData.token;
-    var amountDue = invoiceData.amountDue;
+    var amountDue = ethers_1.BigNumber.from(invoiceData.amountDue);
     var payTo = invoiceData.payTo;
     let feeAddressesArray = JSON.parse(invoiceData.feeAddressesArrayStringified);
     let feePercentsArray = JSON.parse(invoiceData.feePercentsArrayStringified);
