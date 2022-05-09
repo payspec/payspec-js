@@ -10,9 +10,9 @@ export interface PayspecInvoice {
 
   payspecContractAddress: string,
   description : string,
-  nonce: BigNumber,
+  nonce: string, //BigNumber,
   token: string,
-  amountDue: BigNumber,
+  amountDue: string, //BigNumber,
   payTo: string,
   feeAddressesArrayStringified: string, //Array<string>, // use JSON.stringify and JSON.parse
   feePercentsArrayStringified: string, //Array<number>, // use JSON.stringify and JSON.parse
@@ -29,9 +29,9 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
 {
   var payspecContractAddress = invoiceData.payspecContractAddress;
   var description = invoiceData.description;
-  var nonce =invoiceData.nonce;
+  var nonce = BigNumber.from(invoiceData.nonce);
   var token =invoiceData.token;
-  var amountDue =invoiceData.amountDue;
+  var amountDue = BigNumber.from(invoiceData.amountDue);
   var payTo =invoiceData.payTo;
 
   let feeAddressesArray = JSON.parse(invoiceData.feeAddressesArrayStringified)
