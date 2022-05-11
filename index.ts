@@ -12,10 +12,9 @@ export interface PayspecInvoice {
   description : string,
   nonce: string, //BigNumber,
   token: string,
-  amountDue: string, //BigNumber,
-  payTo: string,
-  feeAddressesArrayStringified: string, //Array<string>, // use JSON.stringify and JSON.parse
-  feePercentsArrayStringified: string, //Array<number>, // use JSON.stringify and JSON.parse
+  totalAmountDue: string, //BigNumber, 
+  payToArrayStringified: string, //Array<string>, // use JSON.stringify and JSON.parse
+  amountsDueArrayStringified: string, //Array<number>, // use JSON.stringify and JSON.parse
   expiresAt: number,
   invoiceUUID?: string 
 
@@ -31,14 +30,13 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
   var description = invoiceData.description;
   var nonce = BigNumber.from(invoiceData.nonce);
   var token =invoiceData.token;
-  var amountDue = BigNumber.from(invoiceData.amountDue);
-  var payTo =invoiceData.payTo;
+  var totalAmountDue = BigNumber.from(invoiceData.totalAmountDue);
+  
+  let payToArray = JSON.parse(invoiceData.payToArrayStringified)
+  let amountsDueArray = JSON.parse(invoiceData.amountsDueArrayStringified)
 
-  let feeAddressesArray = JSON.parse(invoiceData.feeAddressesArrayStringified)
-  let feePercentsArray = JSON.parse(invoiceData.feePercentsArrayStringified)
-
-  var feeAddresses = {t: 'address[]' , v:feeAddressesArray}
-  var feePercents = {t: 'uint[]' , v:feePercentsArray}
+  var payTo = {t: 'address[]' , v:payToArray}
+  var amountsDue = {t: 'uint[]' , v:amountsDueArray}
   var expiresAt =invoiceData.expiresAt;
 
  
@@ -49,10 +47,9 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
       // @ts-ignore
     nonce,
     token,
-    amountDue,
+    totalAmountDue,
     payTo,
-    feeAddresses,
-    feePercents,
+    amountsDue, 
     expiresAt );
 } 
 
