@@ -12,16 +12,15 @@ function getPayspecInvoiceUUID(invoiceData) {
     var description = invoiceData.description;
     var nonce = ethers_1.BigNumber.from(invoiceData.nonce);
     var token = invoiceData.token;
-    var amountDue = ethers_1.BigNumber.from(invoiceData.amountDue);
-    var payTo = invoiceData.payTo;
-    let feeAddressesArray = JSON.parse(invoiceData.feeAddressesArrayStringified);
-    let feePercentsArray = JSON.parse(invoiceData.feePercentsArrayStringified);
-    var feeAddresses = { t: 'address[]', v: feeAddressesArray };
-    var feePercents = { t: 'uint[]', v: feePercentsArray };
+    var totalAmountDue = ethers_1.BigNumber.from(invoiceData.totalAmountDue);
+    let payToArray = JSON.parse(invoiceData.payToArrayStringified);
+    let amountsDueArray = JSON.parse(invoiceData.amountsDueArrayStringified);
+    var payTo = { t: 'address[]', v: payToArray };
+    var amountsDue = { t: 'uint[]', v: amountsDueArray };
     var expiresAt = invoiceData.expiresAt;
     return web3_utils_1.default.soliditySha3(payspecContractAddress, description, 
     // @ts-ignore
-    nonce, token, amountDue, payTo, feeAddresses, feePercents, expiresAt);
+    nonce, token, totalAmountDue, payTo, amountsDue, expiresAt);
 }
 exports.getPayspecInvoiceUUID = getPayspecInvoiceUUID;
 function generateInvoiceUUID(invoiceData) {
