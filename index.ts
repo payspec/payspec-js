@@ -9,7 +9,7 @@ import web3utils from 'web3-utils'
 
 
 
-const payspecDeployment =  require('deployments/Payspec.json')
+const payspecDeployment =  require('../deployments/rinkeby/Payspec.json')
 const payspecABI = payspecDeployment.abi
 
 export interface PayspecInvoice {
@@ -45,7 +45,15 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
   var amountsDue = {t: 'uint[]' , v:amountsDueArray}
   var expiresAt =invoiceData.expiresAt;
 
- 
+  console.log('getPayspecInvoiceUUID , ' ,  payspecContractAddress,
+  description,
+    // @ts-ignore
+  nonce,
+  token,
+  totalAmountDue,
+  payTo,
+  amountsDue, 
+  expiresAt)
     
   return web3utils.soliditySha3(
     payspecContractAddress,

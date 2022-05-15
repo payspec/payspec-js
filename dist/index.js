@@ -15,7 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.userPayInvoice = exports.parseStringifiedArray = exports.generateInvoiceUUID = exports.getPayspecInvoiceUUID = exports.ETH_ADDRESS = void 0;
 const ethers_1 = require("ethers");
 const web3_utils_1 = __importDefault(require("web3-utils"));
-const payspecDeployment = require('deployments/Payspec.json');
+const payspecDeployment = require('../deployments/rinkeby/Payspec.json');
 const payspecABI = payspecDeployment.abi;
 exports.ETH_ADDRESS = "0x0000000000000000000000000000000000000010";
 function getPayspecInvoiceUUID(invoiceData) {
@@ -29,6 +29,9 @@ function getPayspecInvoiceUUID(invoiceData) {
     var payTo = { t: 'address[]', v: payToArray };
     var amountsDue = { t: 'uint[]', v: amountsDueArray };
     var expiresAt = invoiceData.expiresAt;
+    console.log('getPayspecInvoiceUUID , ', payspecContractAddress, description, 
+    // @ts-ignore
+    nonce, token, totalAmountDue, payTo, amountsDue, expiresAt);
     return web3_utils_1.default.soliditySha3(payspecContractAddress, description, 
     // @ts-ignore
     nonce, token, totalAmountDue, payTo, amountsDue, expiresAt);
