@@ -11,6 +11,7 @@ import web3utils from 'web3-utils'
 
 const payspecDeployment =  require('../deployments/rinkeby/Payspec.json')
 const payspecABI = payspecDeployment.abi
+export const PayspecContractAddress = payspecDeployment.address
 
 export interface PayspecInvoice {
 
