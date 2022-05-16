@@ -12,13 +12,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userPayInvoice = exports.parseStringifiedArray = exports.generateInvoiceUUID = exports.getPayspecInvoiceUUID = exports.ETH_ADDRESS = exports.PayspecContractAddress = void 0;
+exports.userPayInvoice = exports.parseStringifiedArray = exports.generateInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecContractDeployment = exports.ETH_ADDRESS = void 0;
 const ethers_1 = require("ethers");
 const web3_utils_1 = __importDefault(require("web3-utils"));
-const payspecDeployment = require('../deployments/rinkeby/Payspec.json');
-const payspecABI = payspecDeployment.abi;
-exports.PayspecContractAddress = payspecDeployment.address;
+const contracts_helper_1 = __importDefault(require("./lib/contracts-helper"));
 exports.ETH_ADDRESS = "0x0000000000000000000000000000000000000010";
+function getPayspecContractDeployment(networkName) {
+    let contractName = 'Payspec';
+    return contracts_helper_1.default.getDeploymentConfig(networkName, contractName);
+}
+exports.getPayspecContractDeployment = getPayspecContractDeployment;
 function getPayspecInvoiceUUID(invoiceData) {
     var payspecContractAddress = invoiceData.payspecContractAddress;
     var description = invoiceData.description;
@@ -46,8 +49,11 @@ function parseStringifiedArray(str) {
     return JSON.parse(str);
 }
 exports.parseStringifiedArray = parseStringifiedArray;
-function userPayInvoice(from, invoiceData, provider) {
+function userPayInvoice(from, invoiceData, provider, netName) {
     return __awaiter(this, void 0, void 0, function* () {
+        let networkName = netName ? netName : 'mainnet';
+        let payspecContractData = getPayspecContractDeployment(networkName);
+        let payspecABI = payspecContractData.abi;
         let payspecContractInstance = new ethers_1.Contract(invoiceData.payspecContractAddress, payspecABI);
         let description = invoiceData.description;
         let nonce = invoiceData.nonce;
@@ -57,8 +63,16 @@ function userPayInvoice(from, invoiceData, provider) {
         let amountsDueArray = parseStringifiedArray(invoiceData.amountsDueArrayStringified);
         let ethBlockExpiresAt = invoiceData.expiresAt;
         let expectedUUID = invoiceData.invoiceUUID;
+        console.log('populate tx ', description, nonce, token, totalAmountDue, //wei
+        payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID);
+        let signer = provider.getSigner();
+        let tx = yield payspecContractInstance.connect(signer).createAndPayInvoice(description, nonce, token, totalAmountDue, //wei
+        payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID, { from });
+        console.log('tx', tx);
+        return;
         let txData = payspecContractInstance.populateTransaction.createAndPayInvoice(description, nonce, token, totalAmountDue, //wei
         payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID);
+        console.log('txData', txData);
         let usesEther = (token == exports.ETH_ADDRESS);
         let totalAmountDueEth = usesEther ? totalAmountDue : '0';
         //calculate value eth -- depends on tokenAddre in invoice data 

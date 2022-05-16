@@ -6,12 +6,14 @@ export type APICall = (req: any, res: any) => any
 import { Web3Provider } from "@ethersproject/providers";
 import { BigNumber , Contract, utils } from "ethers";
 import web3utils from 'web3-utils'
+import ContractsHelper from "./lib/contracts-helper";
 
 
-
+/*
 const payspecDeployment =  require('../deployments/rinkeby/Payspec.json')
 const payspecABI = payspecDeployment.abi
 export const PayspecContractAddress = payspecDeployment.address
+*/
 
 export interface PayspecInvoice {
 
@@ -30,6 +32,14 @@ export interface PayspecInvoice {
 
 export const ETH_ADDRESS = "0x0000000000000000000000000000000000000010" 
 
+
+export function getPayspecContractDeployment( networkName: string ): {address:string, abi:any }{
+
+  let contractName = 'Payspec'
+
+  return ContractsHelper.getDeploymentConfig(networkName, contractName)
+
+}
 
 export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
 {
@@ -81,9 +91,13 @@ export function parseStringifiedArray(str: string): any[]{
 }
 
 
-export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, provider: Web3Provider ){
+export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, provider: Web3Provider, netName?: string ){
 
-   
+  let networkName = netName? netName : 'mainnet'
+
+  let payspecContractData = getPayspecContractDeployment(networkName)
+  let payspecABI = payspecContractData.abi 
+
 
   let payspecContractInstance = new Contract( invoiceData.payspecContractAddress, payspecABI)
 
@@ -97,6 +111,33 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
   let ethBlockExpiresAt = invoiceData.expiresAt
   let expectedUUID = invoiceData.invoiceUUID
 
+  console.log('populate tx ',
+  description,
+  nonce,
+  token,
+  totalAmountDue, //wei
+  payToArray,
+  amountsDueArray,
+  ethBlockExpiresAt,
+  expectedUUID
+  )
+
+  let signer = provider.getSigner()
+
+
+  let tx = await payspecContractInstance.connect(signer).createAndPayInvoice( description,
+    nonce,
+    token,
+    totalAmountDue, //wei
+    payToArray,
+    amountsDueArray,
+    ethBlockExpiresAt,
+    expectedUUID, {from})
+
+    console.log('tx',tx)
+
+    return 
+
 
   let txData = payspecContractInstance.populateTransaction.createAndPayInvoice(
     description,
@@ -109,6 +150,8 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
     expectedUUID
     )
 
+    console.log('txData',txData)
+
 
   let usesEther = ( token == ETH_ADDRESS )
   
@@ -119,7 +162,7 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
   let valueEth = utils.parseUnits(totalAmountDueEth, 'wei').toHexString()
 
    
-      const params = [{
+    const params = [{
         from,
         to: invoiceData.payspecContractAddress,
         data: txData,
