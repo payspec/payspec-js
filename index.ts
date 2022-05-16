@@ -34,10 +34,9 @@ export const ETH_ADDRESS = "0x0000000000000000000000000000000000000010"
 
 
 export function getPayspecContractDeployment( networkName: string ): {address:string, abi:any }{
+ 
 
-  let contractName = 'Payspec'
-
-  return ContractsHelper.getDeploymentConfig(networkName, contractName)
+  return ContractsHelper.getDeploymentConfig(networkName)
 
 }
 
@@ -103,7 +102,7 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
 
 
   let description = invoiceData.description
-  let nonce = invoiceData.nonce
+  let nonce = BigNumber.from( invoiceData.nonce)
   let token = invoiceData.token
   let totalAmountDue = invoiceData.totalAmountDue
   let payToArray = parseStringifiedArray(invoiceData.payToArrayStringified)
@@ -124,6 +123,14 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
 
   let signer = provider.getSigner()
 
+  let usesEther = ( token == ETH_ADDRESS )  
+
+  let totalAmountDueEth:string = usesEther ? totalAmountDue : '0'
+
+  //calculate value eth -- depends on tokenAddre in invoice data 
+  let valueEth = utils.parseUnits(totalAmountDueEth, 'wei').toHexString()
+
+
 
   let tx = await payspecContractInstance.connect(signer).createAndPayInvoice( description,
     nonce,
@@ -132,7 +139,7 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
     payToArray,
     amountsDueArray,
     ethBlockExpiresAt,
-    expectedUUID, {from})
+    expectedUUID, {from,value: valueEth})
 
     console.log('tx',tx)
 
@@ -151,17 +158,7 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
     )
 
     console.log('txData',txData)
-
-
-  let usesEther = ( token == ETH_ADDRESS )
-  
-
-  let totalAmountDueEth:string = usesEther ? totalAmountDue : '0'
-
-  //calculate value eth -- depends on tokenAddre in invoice data 
-  let valueEth = utils.parseUnits(totalAmountDueEth, 'wei').toHexString()
-
-   
+ 
     const params = [{
         from,
         to: invoiceData.payspecContractAddress,

@@ -18,8 +18,7 @@ const web3_utils_1 = __importDefault(require("web3-utils"));
 const contracts_helper_1 = __importDefault(require("./lib/contracts-helper"));
 exports.ETH_ADDRESS = "0x0000000000000000000000000000000000000010";
 function getPayspecContractDeployment(networkName) {
-    let contractName = 'Payspec';
-    return contracts_helper_1.default.getDeploymentConfig(networkName, contractName);
+    return contracts_helper_1.default.getDeploymentConfig(networkName);
 }
 exports.getPayspecContractDeployment = getPayspecContractDeployment;
 function getPayspecInvoiceUUID(invoiceData) {
@@ -56,7 +55,7 @@ function userPayInvoice(from, invoiceData, provider, netName) {
         let payspecABI = payspecContractData.abi;
         let payspecContractInstance = new ethers_1.Contract(invoiceData.payspecContractAddress, payspecABI);
         let description = invoiceData.description;
-        let nonce = invoiceData.nonce;
+        let nonce = ethers_1.BigNumber.from(invoiceData.nonce);
         let token = invoiceData.token;
         let totalAmountDue = invoiceData.totalAmountDue;
         let payToArray = parseStringifiedArray(invoiceData.payToArrayStringified);
@@ -66,17 +65,17 @@ function userPayInvoice(from, invoiceData, provider, netName) {
         console.log('populate tx ', description, nonce, token, totalAmountDue, //wei
         payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID);
         let signer = provider.getSigner();
+        let usesEther = (token == exports.ETH_ADDRESS);
+        let totalAmountDueEth = usesEther ? totalAmountDue : '0';
+        //calculate value eth -- depends on tokenAddre in invoice data 
+        let valueEth = ethers_1.utils.parseUnits(totalAmountDueEth, 'wei').toHexString();
         let tx = yield payspecContractInstance.connect(signer).createAndPayInvoice(description, nonce, token, totalAmountDue, //wei
-        payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID, { from });
+        payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID, { from, value: valueEth });
         console.log('tx', tx);
         return;
         let txData = payspecContractInstance.populateTransaction.createAndPayInvoice(description, nonce, token, totalAmountDue, //wei
         payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID);
         console.log('txData', txData);
-        let usesEther = (token == exports.ETH_ADDRESS);
-        let totalAmountDueEth = usesEther ? totalAmountDue : '0';
-        //calculate value eth -- depends on tokenAddre in invoice data 
-        let valueEth = ethers_1.utils.parseUnits(totalAmountDueEth, 'wei').toHexString();
         const params = [{
                 from,
                 to: invoiceData.payspecContractAddress,
