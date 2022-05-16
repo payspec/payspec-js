@@ -1,15 +1,16 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const file_helper_1 = __importDefault(require("./file-helper"));
+const deploymentFiles = {
+    rinkeby: require('../../deployments/rinkeby/Payspec.json'),
+    //mainnet: require('../deployments/mainnet/Payspec.json')
+};
 class ContractsHelper {
     /*
     Get the deployment data for a contract, including the address and abi
     */
     static getDeploymentConfig(networkName, contractName) {
-        let contents = file_helper_1.default.readJSONFile(`deployments/${networkName}/${contractName}.json`);
+        //@ts-ignore 
+        let contents = deploymentFiles[networkName];
         return contents;
     }
 }

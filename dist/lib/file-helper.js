@@ -3,21 +3,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs_1 = __importDefault(require("fs"));
-const path_1 = __importDefault(require("path"));
+const fs = require('fs');
+const path = require('path');
 const web3_utils_1 = __importDefault(require("web3-utils"));
 class FileHelper {
     static readJSONFile(uri) {
-        let input = fs_1.default.readFileSync(path_1.default.resolve(uri), { encoding: 'utf8', flag: 'r' });
+        let input = fs.readFileSync(path.resolve(uri), { encoding: 'utf8', flag: 'r' });
         return JSON.parse(input);
     }
     static readLocalFile(path) {
-        let output = fs_1.default.readFileSync(path, { encoding: 'utf8' });
+        let output = fs.readFileSync(path, { encoding: 'utf8' });
         return output;
     }
     static mkdirSync(path) {
         try {
-            fs_1.default.mkdirSync(path);
+            fs.mkdirSync(path);
         }
         catch (e) {
             //console.error(e)

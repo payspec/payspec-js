@@ -3,16 +3,23 @@
 
  
 import web3utils from 'web3-utils'
-import FileHelper from './file-helper'
+
+
+const deploymentFiles = {
+  rinkeby: require('../../deployments/rinkeby/Payspec.json'),
+  //mainnet: require('../deployments/mainnet/Payspec.json')
+
+}
 
 export default class ContractsHelper  {
 
   /*
   Get the deployment data for a contract, including the address and abi 
   */
-  static getDeploymentConfig(networkName: string, contractName: string) : {address:string,abi:any} {
+  static getDeploymentConfig(networkName: string, contractName?: string) : {address:string,abi:any} {
     
-    let contents = FileHelper.readJSONFile(`deployments/${networkName}/${contractName}.json`)
+    //@ts-ignore 
+    let contents = deploymentFiles[networkName]
 
     return contents
   }
