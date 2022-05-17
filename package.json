@@ -1,7 +1,7 @@
 {
   "name": "payspec-js",
-  "version": "0.20.0",
-  "description": "Library for Web3 Payments Protocol",
+  "version": "0.21.0",
+  "description": "Deterministic invoicing and payments for Web3",
   "main": "dist/index.js",
   "scripts": {
     "test": "NODE_ENV=test TS_NODE_PROJECT=\"tsconfig.testing.json\" mocha --require ts-node/register 'test/**/*.ts' --timeout 25000",

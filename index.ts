@@ -55,15 +55,7 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
   var amountsDue = {t: 'uint[]' , v:amountsDueArray}
   var expiresAt = {t:'uint', v: invoiceData.expiresAt};
 
-  console.log('getting PayspecInvoiceUUID , ' ,  payspecContractAddress,
-
-  description, 
-  nonce,
-  token,
-  totalAmountDue,
-  payTo,
-  amountsDue, 
-  expiresAt)
+  
     
   return web3utils.soliditySha3(
     payspecContractAddress,
@@ -95,10 +87,16 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
 
   let payspecContractData = getPayspecContractDeployment(networkName)
   let payspecABI = payspecContractData.abi 
+  let payspecAddress = payspecContractData.address 
+
+  
 
 
   let payspecContractInstance = new Contract( invoiceData.payspecContractAddress, payspecABI)
 
+  if(invoiceData.payspecContractAddress != payspecAddress){
+    console.error('Contract address mismatch', payspecAddress, invoiceData)
+  }
 
   let description = invoiceData.description
   let nonce = BigNumber.from( invoiceData.nonce).toString()
@@ -108,25 +106,10 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
   let amountsDueArray = parseStringifiedArray(invoiceData.amountsDueArrayStringified)
   let ethBlockExpiresAt = invoiceData.expiresAt
   
-    //incorrect 
+    
  
-
- 
-
-  invoiceData.invoiceUUID = getPayspecInvoiceUUID( invoiceData )!
-
-   //let expectedUUID = invoiceData.invoiceUUID
-
-  console.log('populate tx ',
-  description,
-  nonce,
-  token,
-  totalAmountDue, //wei
-  payToArray,
-  amountsDueArray,
-  ethBlockExpiresAt,
-  invoiceData.invoiceUUID
-  )
+  let expectedUUID = invoiceData.invoiceUUID
+  
 
   let signer = provider.getSigner()
 
@@ -165,38 +148,13 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
     payToArray,
     amountsDueArray,
     ethBlockExpiresAt,
-    invoiceData.invoiceUUID,
+    expectedUUID,
      {from,value: valueEth})
 
     console.log('tx',tx)
 
-    return 
-
-/*
-  let txData = payspecContractInstance.populateTransaction.createAndPayInvoice(
-    description,
-    nonce,
-    token,
-    totalAmountDue, //wei
-    payToArray,
-    amountsDueArray,
-    ethBlockExpiresAt,
-    expectedUUID
-    )
-
-    console.log('txData',txData)
+    return tx
  
-    const params = [{
-        from,
-        to: invoiceData.payspecContractAddress,
-        data: txData,
-        value: valueEth
-    }];
-
-    const transactionHash = await provider.send('eth_sendTransaction', params)
-    console.log('transactionHash is ' + transactionHash);
-*/
-
 
 
 

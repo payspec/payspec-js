@@ -49,7 +49,11 @@ function userPayInvoice(from, invoiceData, provider, netName) {
         let networkName = netName ? netName : 'mainnet';
         let payspecContractData = getPayspecContractDeployment(networkName);
         let payspecABI = payspecContractData.abi;
+        let payspecAddress = payspecContractData.address;
         let payspecContractInstance = new ethers_1.Contract(invoiceData.payspecContractAddress, payspecABI);
+        if (invoiceData.payspecContractAddress != payspecAddress) {
+            console.error('Contract address mismatch', payspecAddress, invoiceData);
+        }
         let description = invoiceData.description;
         let nonce = ethers_1.BigNumber.from(invoiceData.nonce).toString();
         let token = invoiceData.token;
@@ -58,10 +62,11 @@ function userPayInvoice(from, invoiceData, provider, netName) {
         let amountsDueArray = parseStringifiedArray(invoiceData.amountsDueArrayStringified);
         let ethBlockExpiresAt = invoiceData.expiresAt;
         //incorrect 
-        invoiceData.invoiceUUID = getPayspecInvoiceUUID(invoiceData);
+        let expectedUUID = invoiceData.invoiceUUID;
+        //invoiceData.invoiceUUID = getPayspecInvoiceUUID( invoiceData )!
         //let expectedUUID = invoiceData.invoiceUUID
         console.log('populate tx ', description, nonce, token, totalAmountDue, //wei
-        payToArray, amountsDueArray, ethBlockExpiresAt, invoiceData.invoiceUUID);
+        payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID);
         let signer = provider.getSigner();
         let usesEther = (token == exports.ETH_ADDRESS);
         let totalAmountDueEth = usesEther ? totalAmountDue : '0';
@@ -76,7 +81,7 @@ function userPayInvoice(from, invoiceData, provider, netName) {
             console.log('uuid match2 ');
         }
         let tx = yield payspecContractInstance.connect(signer).createAndPayInvoice(description, nonce, token, totalAmountDue, //wei
-        payToArray, amountsDueArray, ethBlockExpiresAt, invoiceData.invoiceUUID, { from, value: valueEth });
+        payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID, { from, value: valueEth });
         console.log('tx', tx);
         return;
         /*
