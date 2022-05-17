@@ -42,22 +42,22 @@ export function getPayspecContractDeployment( networkName: string ): {address:st
 
 export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
 {
-  var payspecContractAddress = invoiceData.payspecContractAddress;
-  var description = invoiceData.description;
-  var nonce = BigNumber.from(invoiceData.nonce);
-  var token =invoiceData.token;
-  var totalAmountDue = BigNumber.from(invoiceData.totalAmountDue);
+  var payspecContractAddress = {t: 'address', v: invoiceData.payspecContractAddress};
+  var description = {t: 'string', v: invoiceData.description};
+  var nonce = {t: 'uint256', v: BigNumber.from(invoiceData.nonce).toString() } ;
+  var token = {t:'address', v: invoiceData.token};
+  var totalAmountDue = {t: 'uint256', v: BigNumber.from(invoiceData.totalAmountDue).toString() };
   
   let payToArray = JSON.parse(invoiceData.payToArrayStringified)
   let amountsDueArray = JSON.parse(invoiceData.amountsDueArrayStringified)
 
   var payTo = {t: 'address[]' , v:payToArray}
   var amountsDue = {t: 'uint[]' , v:amountsDueArray}
-  var expiresAt =invoiceData.expiresAt;
+  var expiresAt = {t:'uint', v: invoiceData.expiresAt};
 
-  console.log('getPayspecInvoiceUUID , ' ,  payspecContractAddress,
-  description,
-    // @ts-ignore
+  console.log('getting PayspecInvoiceUUID , ' ,  payspecContractAddress,
+
+  description, 
   nonce,
   token,
   totalAmountDue,
@@ -67,8 +67,7 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
     
   return web3utils.soliditySha3(
     payspecContractAddress,
-    description,
-      // @ts-ignore
+    description, 
     nonce,
     token,
     totalAmountDue,
@@ -102,13 +101,21 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
 
 
   let description = invoiceData.description
-  let nonce = BigNumber.from( invoiceData.nonce)
+  let nonce = BigNumber.from( invoiceData.nonce).toString()
   let token = invoiceData.token
-  let totalAmountDue = invoiceData.totalAmountDue
+  let totalAmountDue = BigNumber.from(invoiceData.totalAmountDue).toString()
   let payToArray = parseStringifiedArray(invoiceData.payToArrayStringified)
   let amountsDueArray = parseStringifiedArray(invoiceData.amountsDueArrayStringified)
   let ethBlockExpiresAt = invoiceData.expiresAt
-  let expectedUUID = invoiceData.invoiceUUID
+  
+    //incorrect 
+ 
+
+ 
+
+  invoiceData.invoiceUUID = getPayspecInvoiceUUID( invoiceData )!
+
+   //let expectedUUID = invoiceData.invoiceUUID
 
   console.log('populate tx ',
   description,
@@ -118,7 +125,7 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
   payToArray,
   amountsDueArray,
   ethBlockExpiresAt,
-  expectedUUID
+  invoiceData.invoiceUUID
   )
 
   let signer = provider.getSigner()
@@ -131,21 +138,41 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
   let valueEth = utils.parseUnits(totalAmountDueEth, 'wei').toHexString()
 
 
+  let contractInvoiceUUID = await payspecContractInstance.connect(signer).getInvoiceUUID(
+    description,
+    nonce,
+    token,
+    totalAmountDue, //wei
+    payToArray,
+    amountsDueArray,
+    ethBlockExpiresAt
 
-  let tx = await payspecContractInstance.connect(signer).createAndPayInvoice( description,
+
+  )
+
+  if(contractInvoiceUUID != invoiceData.invoiceUUID){
+    console.error('contract MISMATCH UUID ', contractInvoiceUUID, invoiceData )
+  }else{
+    console.log('uuid match2 ')
+  }
+
+
+  let tx = await payspecContractInstance.connect(signer).createAndPayInvoice(
+    description,
     nonce,
     token,
     totalAmountDue, //wei
     payToArray,
     amountsDueArray,
     ethBlockExpiresAt,
-    expectedUUID, {from,value: valueEth})
+    invoiceData.invoiceUUID,
+     {from,value: valueEth})
 
     console.log('tx',tx)
 
     return 
 
-
+/*
   let txData = payspecContractInstance.populateTransaction.createAndPayInvoice(
     description,
     nonce,
@@ -168,7 +195,7 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
 
     const transactionHash = await provider.send('eth_sendTransaction', params)
     console.log('transactionHash is ' + transactionHash);
-
+*/
 
 
 

@@ -22,22 +22,18 @@ function getPayspecContractDeployment(networkName) {
 }
 exports.getPayspecContractDeployment = getPayspecContractDeployment;
 function getPayspecInvoiceUUID(invoiceData) {
-    var payspecContractAddress = invoiceData.payspecContractAddress;
-    var description = invoiceData.description;
-    var nonce = ethers_1.BigNumber.from(invoiceData.nonce);
-    var token = invoiceData.token;
-    var totalAmountDue = ethers_1.BigNumber.from(invoiceData.totalAmountDue);
+    var payspecContractAddress = { t: 'address', v: invoiceData.payspecContractAddress };
+    var description = { t: 'string', v: invoiceData.description };
+    var nonce = { t: 'uint256', v: ethers_1.BigNumber.from(invoiceData.nonce).toString() };
+    var token = { t: 'address', v: invoiceData.token };
+    var totalAmountDue = { t: 'uint256', v: ethers_1.BigNumber.from(invoiceData.totalAmountDue).toString() };
     let payToArray = JSON.parse(invoiceData.payToArrayStringified);
     let amountsDueArray = JSON.parse(invoiceData.amountsDueArrayStringified);
     var payTo = { t: 'address[]', v: payToArray };
     var amountsDue = { t: 'uint[]', v: amountsDueArray };
-    var expiresAt = invoiceData.expiresAt;
-    console.log('getPayspecInvoiceUUID , ', payspecContractAddress, description, 
-    // @ts-ignore
-    nonce, token, totalAmountDue, payTo, amountsDue, expiresAt);
-    return web3_utils_1.default.soliditySha3(payspecContractAddress, description, 
-    // @ts-ignore
-    nonce, token, totalAmountDue, payTo, amountsDue, expiresAt);
+    var expiresAt = { t: 'uint', v: invoiceData.expiresAt };
+    console.log('getting PayspecInvoiceUUID , ', payspecContractAddress, description, nonce, token, totalAmountDue, payTo, amountsDue, expiresAt);
+    return web3_utils_1.default.soliditySha3(payspecContractAddress, description, nonce, token, totalAmountDue, payTo, amountsDue, expiresAt);
 }
 exports.getPayspecInvoiceUUID = getPayspecInvoiceUUID;
 function generateInvoiceUUID(invoiceData) {
@@ -55,35 +51,58 @@ function userPayInvoice(from, invoiceData, provider, netName) {
         let payspecABI = payspecContractData.abi;
         let payspecContractInstance = new ethers_1.Contract(invoiceData.payspecContractAddress, payspecABI);
         let description = invoiceData.description;
-        let nonce = ethers_1.BigNumber.from(invoiceData.nonce);
+        let nonce = ethers_1.BigNumber.from(invoiceData.nonce).toString();
         let token = invoiceData.token;
-        let totalAmountDue = invoiceData.totalAmountDue;
+        let totalAmountDue = ethers_1.BigNumber.from(invoiceData.totalAmountDue).toString();
         let payToArray = parseStringifiedArray(invoiceData.payToArrayStringified);
         let amountsDueArray = parseStringifiedArray(invoiceData.amountsDueArrayStringified);
         let ethBlockExpiresAt = invoiceData.expiresAt;
-        let expectedUUID = invoiceData.invoiceUUID;
+        //incorrect 
+        invoiceData.invoiceUUID = getPayspecInvoiceUUID(invoiceData);
+        //let expectedUUID = invoiceData.invoiceUUID
         console.log('populate tx ', description, nonce, token, totalAmountDue, //wei
-        payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID);
+        payToArray, amountsDueArray, ethBlockExpiresAt, invoiceData.invoiceUUID);
         let signer = provider.getSigner();
         let usesEther = (token == exports.ETH_ADDRESS);
         let totalAmountDueEth = usesEther ? totalAmountDue : '0';
         //calculate value eth -- depends on tokenAddre in invoice data 
         let valueEth = ethers_1.utils.parseUnits(totalAmountDueEth, 'wei').toHexString();
+        let contractInvoiceUUID = yield payspecContractInstance.connect(signer).getInvoiceUUID(description, nonce, token, totalAmountDue, //wei
+        payToArray, amountsDueArray, ethBlockExpiresAt);
+        if (contractInvoiceUUID != invoiceData.invoiceUUID) {
+            console.error('contract MISMATCH UUID ', contractInvoiceUUID, invoiceData);
+        }
+        else {
+            console.log('uuid match2 ');
+        }
         let tx = yield payspecContractInstance.connect(signer).createAndPayInvoice(description, nonce, token, totalAmountDue, //wei
-        payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID, { from, value: valueEth });
+        payToArray, amountsDueArray, ethBlockExpiresAt, invoiceData.invoiceUUID, { from, value: valueEth });
         console.log('tx', tx);
         return;
-        let txData = payspecContractInstance.populateTransaction.createAndPayInvoice(description, nonce, token, totalAmountDue, //wei
-        payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID);
-        console.log('txData', txData);
-        const params = [{
+        /*
+          let txData = payspecContractInstance.populateTransaction.createAndPayInvoice(
+            description,
+            nonce,
+            token,
+            totalAmountDue, //wei
+            payToArray,
+            amountsDueArray,
+            ethBlockExpiresAt,
+            expectedUUID
+            )
+        
+            console.log('txData',txData)
+         
+            const params = [{
                 from,
                 to: invoiceData.payspecContractAddress,
                 data: txData,
                 value: valueEth
             }];
-        const transactionHash = yield provider.send('eth_sendTransaction', params);
-        console.log('transactionHash is ' + transactionHash);
+        
+            const transactionHash = await provider.send('eth_sendTransaction', params)
+            console.log('transactionHash is ' + transactionHash);
+        */
     });
 }
 exports.userPayInvoice = userPayInvoice;
