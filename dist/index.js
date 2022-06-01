@@ -32,7 +32,6 @@ function getPayspecInvoiceUUID(invoiceData) {
     var payTo = { t: 'address[]', v: payToArray };
     var amountsDue = { t: 'uint[]', v: amountsDueArray };
     var expiresAt = { t: 'uint', v: invoiceData.expiresAt };
-    console.log('getting PayspecInvoiceUUID , ', payspecContractAddress, description, nonce, token, totalAmountDue, payTo, amountsDue, expiresAt);
     return web3_utils_1.default.soliditySha3(payspecContractAddress, description, nonce, token, totalAmountDue, payTo, amountsDue, expiresAt);
 }
 exports.getPayspecInvoiceUUID = getPayspecInvoiceUUID;
@@ -61,12 +60,7 @@ function userPayInvoice(from, invoiceData, provider, netName) {
         let payToArray = parseStringifiedArray(invoiceData.payToArrayStringified);
         let amountsDueArray = parseStringifiedArray(invoiceData.amountsDueArrayStringified);
         let ethBlockExpiresAt = invoiceData.expiresAt;
-        //incorrect 
         let expectedUUID = invoiceData.invoiceUUID;
-        //invoiceData.invoiceUUID = getPayspecInvoiceUUID( invoiceData )!
-        //let expectedUUID = invoiceData.invoiceUUID
-        console.log('populate tx ', description, nonce, token, totalAmountDue, //wei
-        payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID);
         let signer = provider.getSigner();
         let usesEther = (token == exports.ETH_ADDRESS);
         let totalAmountDueEth = usesEther ? totalAmountDue : '0';
@@ -83,31 +77,7 @@ function userPayInvoice(from, invoiceData, provider, netName) {
         let tx = yield payspecContractInstance.connect(signer).createAndPayInvoice(description, nonce, token, totalAmountDue, //wei
         payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID, { from, value: valueEth });
         console.log('tx', tx);
-        return;
-        /*
-          let txData = payspecContractInstance.populateTransaction.createAndPayInvoice(
-            description,
-            nonce,
-            token,
-            totalAmountDue, //wei
-            payToArray,
-            amountsDueArray,
-            ethBlockExpiresAt,
-            expectedUUID
-            )
-        
-            console.log('txData',txData)
-         
-            const params = [{
-                from,
-                to: invoiceData.payspecContractAddress,
-                data: txData,
-                value: valueEth
-            }];
-        
-            const transactionHash = await provider.send('eth_sendTransaction', params)
-            console.log('transactionHash is ' + transactionHash);
-        */
+        return tx;
     });
 }
 exports.userPayInvoice = userPayInvoice;

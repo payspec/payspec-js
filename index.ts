@@ -40,6 +40,13 @@ export function getPayspecContractDeployment( networkName: string ): {address:st
 
 }
 
+export function getPayspecRandomNonce (size?:number){
+
+  if(!size) size = 16;
+   
+  return web3utils.randomHex(size)
+}
+
 export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
 {
   var payspecContractAddress = {t: 'address', v: invoiceData.payspecContractAddress};
