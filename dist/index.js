@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userPayInvoice = exports.parseStringifiedArray = exports.generateInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecContractDeployment = exports.ETH_ADDRESS = void 0;
+exports.userPayInvoice = exports.parseStringifiedArray = exports.generateInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractDeployment = exports.ETH_ADDRESS = void 0;
 const ethers_1 = require("ethers");
 const web3_utils_1 = __importDefault(require("web3-utils"));
 const contracts_helper_1 = __importDefault(require("./lib/contracts-helper"));
@@ -21,6 +21,12 @@ function getPayspecContractDeployment(networkName) {
     return contracts_helper_1.default.getDeploymentConfig(networkName);
 }
 exports.getPayspecContractDeployment = getPayspecContractDeployment;
+function getPayspecRandomNonce(size) {
+    if (!size)
+        size = 16;
+    return web3_utils_1.default.randomHex(size);
+}
+exports.getPayspecRandomNonce = getPayspecRandomNonce;
 function getPayspecInvoiceUUID(invoiceData) {
     var payspecContractAddress = { t: 'address', v: invoiceData.payspecContractAddress };
     var description = { t: 'string', v: invoiceData.description };
