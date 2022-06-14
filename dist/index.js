@@ -28,6 +28,7 @@ function getPayspecRandomNonce(size) {
 }
 exports.getPayspecRandomNonce = getPayspecRandomNonce;
 function getPayspecInvoiceUUID(invoiceData) {
+    console.log('invoiceData', invoiceData);
     var payspecContractAddress = { t: 'address', v: invoiceData.payspecContractAddress };
     var description = { t: 'string', v: invoiceData.description };
     var nonce = { t: 'uint256', v: ethers_1.BigNumber.from(invoiceData.nonce).toString() };
@@ -80,10 +81,14 @@ function userPayInvoice(from, invoiceData, provider, netName) {
         else {
             console.log('uuid match2 ');
         }
-        let tx = yield payspecContractInstance.connect(signer).createAndPayInvoice(description, nonce, token, totalAmountDue, //wei
-        payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID, { from, value: valueEth });
-        console.log('tx', tx);
-        return tx;
+        try {
+            let tx = yield payspecContractInstance.connect(signer).createAndPayInvoice(description, nonce, token, totalAmountDue, //wei
+            payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID, { from, value: valueEth });
+            return { success: true, data: tx };
+        }
+        catch (err) {
+            return { success: false, error: err };
+        }
     });
 }
 exports.userPayInvoice = userPayInvoice;

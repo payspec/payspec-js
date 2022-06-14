@@ -49,6 +49,8 @@ export function getPayspecRandomNonce (size?:number){
 
 export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
 {
+  console.log('invoiceData',invoiceData)
+
   var payspecContractAddress = {t: 'address', v: invoiceData.payspecContractAddress};
   var description = {t: 'string', v: invoiceData.description};
   var nonce = {t: 'uint256', v: BigNumber.from(invoiceData.nonce).toString() } ;
@@ -88,7 +90,7 @@ export function parseStringifiedArray(str: string): any[]{
 }
 
 
-export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, provider: Web3Provider, netName?: string ){
+export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, provider: Web3Provider, netName?: string ) : Promise<{success:boolean, error?:any, data?: any}> {
 
   let networkName = netName? netName : 'mainnet'
 
@@ -146,23 +148,24 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
     console.log('uuid match2 ')
   }
 
-
-  let tx = await payspecContractInstance.connect(signer).createAndPayInvoice(
-    description,
-    nonce,
-    token,
-    totalAmountDue, //wei
-    payToArray,
-    amountsDueArray,
-    ethBlockExpiresAt,
-    expectedUUID,
-     {from,value: valueEth})
-
-    console.log('tx',tx)
-
-    return tx
  
+  try{
+    let tx = await payspecContractInstance.connect(signer).createAndPayInvoice(
+      description,
+      nonce,
+      token,
+      totalAmountDue, //wei
+      payToArray,
+      amountsDueArray,
+      ethBlockExpiresAt,
+      expectedUUID,
+      {from,value: valueEth})
 
+      return {success:true, data: tx }
+  }catch(err){
 
+      return {success:false, error: err }
+  }
+      
 
 }
