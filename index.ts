@@ -66,7 +66,7 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
 
   
     
-  return web3utils.soliditySha3(
+  let result =  web3utils.soliditySha3(
     payspecContractAddress,
     description, 
     nonce,
@@ -75,6 +75,8 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
     payTo,
     amountsDue, 
     expiresAt );
+
+    return result ? result: undefined
 } 
 
 
