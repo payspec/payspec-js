@@ -1,72 +1,54 @@
-
-
-
-export type APICall = (req: any, res: any) => any
- 
 import { Web3Provider } from "@ethersproject/providers";
-import { BigNumber , Contract, utils } from "ethers";
-import web3utils from 'web3-utils'
+import { BigNumber, Contract, utils } from "ethers";
+import web3utils from 'web3-utils';
 import ContractsHelper from "./lib/contracts-helper";
 
+// Define a type for a function that makes an API call
+export type APICall = (req: any, res: any) => any;
 
-/*
-const payspecDeployment =  require('../deployments/rinkeby/Payspec.json')
-const payspecABI = payspecDeployment.abi
-export const PayspecContractAddress = payspecDeployment.address
-*/
-
+// Define an interface for a Payspec invoice
 export interface PayspecInvoice {
-
-  payspecContractAddress: string,
-  description : string,
-  nonce: string, //BigNumber,
-  token: string,
-  totalAmountDue: string, //BigNumber, 
-  payToArrayStringified: string, //Array<string>, // use JSON.stringify and JSON.parse
-  amountsDueArrayStringified: string, //Array<number>, // use JSON.stringify and JSON.parse
-  expiresAt: number,
-  invoiceUUID?: string 
-
+  payspecContractAddress: string;
+  description: string;
+  nonce: string;
+  token: string;
+  totalAmountDue: string;
+  payToArrayStringified: string;
+  amountsDueArrayStringified: string;
+  expiresAt: number;
+  invoiceUUID?: string;
 }
 
+// Define a constant for the Ethereum address
+export const ETH_ADDRESS = "0x0000000000000000000000000000000000000010";
 
-export const ETH_ADDRESS = "0x0000000000000000000000000000000000000010" 
-
-
-export function getPayspecContractDeployment( networkName: string ): {address:string, abi:any }{
- 
-
-  return ContractsHelper.getDeploymentConfig(networkName)
-
+// Get the Payspec contract deployment configuration for a given network
+export function getPayspecContractDeployment(networkName: string): { address: string; abi: any } {
+  return ContractsHelper.getDeploymentConfig(networkName);
 }
 
-export function getPayspecRandomNonce (size?:number){
-
-  if(!size) size = 16;
-   
-  return web3utils.randomHex(size)
+// Generate a random nonce for a Payspec invoice
+export function getPayspecRandomNonce(size?: number): string {
+  if (!size) size = 16;
+  return web3utils.randomHex(size);
 }
 
-export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
-{
-  console.log('invoiceData',invoiceData)
-
-  var payspecContractAddress = {t: 'address', v: invoiceData.payspecContractAddress};
-  var description = {t: 'string', v: invoiceData.description};
-  var nonce = {t: 'uint256', v: BigNumber.from(invoiceData.nonce).toString() } ;
-  var token = {t:'address', v: invoiceData.token};
-  var totalAmountDue = {t: 'uint256', v: BigNumber.from(invoiceData.totalAmountDue).toString() };
+// Generate a UUID for a Payspec invoice
+export function getPayspecInvoiceUUID(invoiceData: PayspecInvoice): string | undefined {
+  const payspecContractAddress = { t: 'address', v: invoiceData.payspecContractAddress };
+  const description = { t: 'string', v: invoiceData.description };
+  const nonce = { t: 'uint256', v: BigNumber.from(invoiceData.nonce).toString() };
+  const token = { t:'address', v: invoiceData.token };
+  const totalAmountDue = { t: 'uint256', v: BigNumber.from(invoiceData.totalAmountDue).toString() };
   
-  let payToArray = JSON.parse(invoiceData.payToArrayStringified)
-  let amountsDueArray = JSON.parse(invoiceData.amountsDueArrayStringified)
+  const payToArray = JSON.parse(invoiceData.payToArrayStringified);
+  const amountsDueArray = JSON.parse(invoiceData.amountsDueArrayStringified);
 
-  var payTo = {t: 'address[]' , v:payToArray}
-  var amountsDue = {t: 'uint[]' , v:amountsDueArray}
-  var expiresAt = {t:'uint', v: invoiceData.expiresAt};
-
+  const payTo = { t: 'address[]' , v: payToArray };
+  const amountsDue = { t: 'uint[]' , v: amountsDueArray };
+  const expiresAt = { t: 'uint', v: invoiceData.expiresAt };
   
-    
-  let result =  web3utils.soliditySha3(
+  const result = web3utils.soliditySha3(
     payspecContractAddress,
     description, 
     nonce,
@@ -74,100 +56,104 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
     totalAmountDue,
     payTo,
     amountsDue, 
-    expiresAt );
+    expiresAt
+  );
 
-    return result ? result: undefined
+  return result ? result : undefined;
 } 
 
-
-export function generateInvoiceUUID(invoiceData: PayspecInvoice) : PayspecInvoice {
-
-  return Object.assign(invoiceData, {invoiceUUID: getPayspecInvoiceUUID(invoiceData)})
-
+// Add a UUID to a Payspec invoice
+export function generateInvoiceUUID(invoiceData: PayspecInvoice): PayspecInvoice {
+  return Object.assign(invoiceData, { invoiceUUID: getPayspecInvoiceUUID(invoiceData) });
+  }
   
-}
-
-export function parseStringifiedArray(str: string): any[]{
-  return JSON.parse( str  )
-}
-
-
-export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, provider: Web3Provider, netName?: string ) : Promise<{success:boolean, error?:any, data?: any}> {
-
-  let networkName = netName? netName : 'mainnet'
-
-  let payspecContractData = getPayspecContractDeployment(networkName)
-  let payspecABI = payspecContractData.abi 
-  let payspecAddress = payspecContractData.address 
-
+  // Parse a stringified array
+  export function parseStringifiedArray(str: string): any[] {
+  return JSON.parse(str);
+  }
   
-
-
-  let payspecContractInstance = new Contract( invoiceData.payspecContractAddress, payspecABI)
-
-  if(invoiceData.payspecContractAddress != payspecAddress){
-    console.error('Contract address mismatch', payspecAddress, invoiceData)
+  // Pay a Payspec invoice on behalf of a user
+  export async function userPayInvoice(
+  from: string,
+  invoiceData: PayspecInvoice,
+  provider: Web3Provider,
+  netName?: string
+  ): Promise<{ success: boolean; error?: any; data?: any }> {
+  const networkName = netName ? netName : 'mainnet';
+  
+  // Get the Payspec contract deployment configuration for the given network
+  const payspecContractData = getPayspecContractDeployment(networkName);
+  const payspecABI = payspecContractData.abi;
+  const payspecAddress = payspecContractData.address;
+  
+  // Create an instance of the Payspec contract
+  const payspecContractInstance = new Contract(invoiceData.payspecContractAddress, payspecABI);
+  
+  // Check that the contract address in the invoice data matches the expected contract address
+  if (invoiceData.payspecContractAddress != payspecAddress) {
+  console.error('Contract address mismatch', payspecAddress, invoiceData);
+  }
+  
+  // Get the invoice details from the invoice data
+  const description = invoiceData.description;
+  const nonce = BigNumber.from(invoiceData.nonce).toString();
+  const token = invoiceData.token;
+  const totalAmountDue = BigNumber.from(invoiceData.totalAmountDue).toString();
+  const payToArray = parseStringifiedArray(invoiceData.payToArrayStringified);
+  const amountsDueArray = parseStringifiedArray(invoiceData.amountsDueArrayStringified);
+  const ethBlockExpiresAt = invoiceData.expiresAt;
+  const expectedUUID = invoiceData.invoiceUUID;
+  
+  // Get the signer for the user's account
+  const signer = provider.getSigner();
+  
+  // Check if the invoice uses Ether or a token
+  const usesEther = (token == ETH_ADDRESS);
+  const totalAmountDueEth = usesEther ? totalAmountDue : '0';
+  
+  // Calculate the value to send with the transaction (in Ether or token units)
+  const valueEth = utils.parseUnits(totalAmountDueEth, 'wei').toHexString();
+  
+  // Get the UUID for the invoice from the Payspec contract
+  const contractInvoiceUUID = await payspecContractInstance.connect(signer).getInvoiceUUID(
+  description,
+  nonce,
+  token,
+  totalAmountDue,
+  payToArray,
+  amountsDueArray,
+  ethBlockExpiresAt
+  );
+  
+  // Check that the UUID from the Payspec contract matches the expected UUID
+  if (contractInvoiceUUID != invoiceData.invoiceUUID) {
+  console.error('Contract UUID mismatch', contractInvoiceUUID, invoiceData);
+  } else {
+  console.log('UUID match');
+  }
+  
+  try {
+  // Call the createAndPayInvoice function on the Payspec contract
+  const tx = await payspecContractInstance.connect(signer).createAndPayInvoice(
+  description,
+  nonce,
+  token,
+  totalAmountDue,
+  payToArray,
+  amountsDueArray,
+  ethBlockExpiresAt,
+  expectedUUID,
+  { from, value: valueEth }
+  );
+   
+  
+  // Return a success response with the transaction data
+  return { success: true, data: tx };
+  
+  } catch (err) {
+  // Return an error response with the error message
+  return { success: false, error: err };
   }
 
-  let description = invoiceData.description
-  let nonce = BigNumber.from( invoiceData.nonce).toString()
-  let token = invoiceData.token
-  let totalAmountDue = BigNumber.from(invoiceData.totalAmountDue).toString()
-  let payToArray = parseStringifiedArray(invoiceData.payToArrayStringified)
-  let amountsDueArray = parseStringifiedArray(invoiceData.amountsDueArrayStringified)
-  let ethBlockExpiresAt = invoiceData.expiresAt
   
-    
- 
-  let expectedUUID = invoiceData.invoiceUUID
-  
-
-  let signer = provider.getSigner()
-
-  let usesEther = ( token == ETH_ADDRESS )  
-
-  let totalAmountDueEth:string = usesEther ? totalAmountDue : '0'
-
-  //calculate value eth -- depends on tokenAddre in invoice data 
-  let valueEth = utils.parseUnits(totalAmountDueEth, 'wei').toHexString()
-
-
-  let contractInvoiceUUID = await payspecContractInstance.connect(signer).getInvoiceUUID(
-    description,
-    nonce,
-    token,
-    totalAmountDue, //wei
-    payToArray,
-    amountsDueArray,
-    ethBlockExpiresAt
-
-
-  )
-
-  if(contractInvoiceUUID != invoiceData.invoiceUUID){
-    console.error('contract MISMATCH UUID ', contractInvoiceUUID, invoiceData )
-  }else{
-    console.log('uuid match2 ')
   }
-
- 
-  try{
-    let tx = await payspecContractInstance.connect(signer).createAndPayInvoice(
-      description,
-      nonce,
-      token,
-      totalAmountDue, //wei
-      payToArray,
-      amountsDueArray,
-      ethBlockExpiresAt,
-      expectedUUID,
-      {from,value: valueEth})
-
-      return {success:true, data: tx }
-  }catch(err){
-
-      return {success:false, error: err }
-  }
-      
-
-}
