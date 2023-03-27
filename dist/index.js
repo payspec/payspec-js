@@ -39,7 +39,8 @@ function getPayspecInvoiceUUID(invoiceData) {
     var payTo = { t: 'address[]', v: payToArray };
     var amountsDue = { t: 'uint[]', v: amountsDueArray };
     var expiresAt = { t: 'uint', v: invoiceData.expiresAt };
-    return web3_utils_1.default.soliditySha3(payspecContractAddress, description, nonce, token, totalAmountDue, payTo, amountsDue, expiresAt);
+    let result = web3_utils_1.default.soliditySha3(payspecContractAddress, description, nonce, token, totalAmountDue, payTo, amountsDue, expiresAt);
+    return result ? result : undefined;
 }
 exports.getPayspecInvoiceUUID = getPayspecInvoiceUUID;
 function generateInvoiceUUID(invoiceData) {
