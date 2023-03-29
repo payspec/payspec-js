@@ -8,13 +8,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.generateInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractDeployment = exports.ETH_ADDRESS = void 0;
 const ethers_1 = require("ethers");
-const web3_utils_1 = __importDefault(require("web3-utils"));
 const contracts_helper_1 = require("./lib/contracts-helper");
 exports.ETH_ADDRESS = "0x0000000000000000000000000000000000000010";
 function getPayspecContractDeployment(networkName) {
@@ -24,7 +20,7 @@ exports.getPayspecContractDeployment = getPayspecContractDeployment;
 function getPayspecRandomNonce(size) {
     if (!size)
         size = 16;
-    return web3_utils_1.default.randomHex(size);
+    return ethers_1.BigNumber.from(ethers_1.ethers.utils.randomBytes(size)).toHexString();
 }
 exports.getPayspecRandomNonce = getPayspecRandomNonce;
 function getPayspecInvoiceUUID(invoiceData) {
@@ -39,7 +35,23 @@ function getPayspecInvoiceUUID(invoiceData) {
     var payTo = { t: 'address[]', v: payToArray };
     var amountsDue = { t: 'uint[]', v: amountsDueArray };
     var expiresAt = { t: 'uint', v: invoiceData.expiresAt };
-    let result = web3_utils_1.default.soliditySha3(payspecContractAddress, description, nonce, token, totalAmountDue, payTo, amountsDue, expiresAt);
+    /*
+    test!!
+  
+    https://github.com/ethers-io/ethers.js/issues/671
+  
+    */
+    /* let result =  ethers.utils.solidityKeccak256(
+       payspecContractAddress,
+       description,
+       nonce,
+       token,
+       totalAmountDue,
+       payTo,
+       amountsDue,
+       expiresAt
+       );*/
+    const result = ethers_1.ethers.utils.solidityKeccak256(['address', 'string', 'uint256', 'address', 'uint256', 'address[]', 'uint256[]', 'uint256'], [payspecContractAddress.v, description.v, nonce.v, token.v, totalAmountDue.v, payTo.v, amountsDue.v, expiresAt.v]);
     return result ? result : undefined;
 }
 exports.getPayspecInvoiceUUID = getPayspecInvoiceUUID;
@@ -75,7 +87,7 @@ function validateInvoice(invoiceData) {
         }
     }
     //token must be an address 
-    if (!web3_utils_1.default.isAddress(invoiceData.token))
+    if (!ethers_1.ethers.utils.isAddress(invoiceData.token))
         throw new Error('token must be an address');
     //pay to array stringified should be valid 
     let payToArray = parseStringifiedArray(invoiceData.payToArrayStringified);
@@ -88,7 +100,7 @@ function validateInvoice(invoiceData) {
         throw new Error('amountsDueArrayStringified must be an array');
     //each pay to address must be valid
     payToArray.forEach((payToAddress) => {
-        if (!web3_utils_1.default.isAddress(payToAddress))
+        if (!ethers_1.ethers.utils.isAddress(payToAddress))
             throw new Error('payToAddress must be an address');
     });
     //total amount due must be equal to sum of amounts due array
@@ -169,6 +181,7 @@ function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paym
         amountsDueArrayStringified,
         expiresAt
     };
+    invoice.invoiceUUID = getPayspecInvoiceUUID(invoice);
     return invoice;
 }
 exports.generatePayspecInvoiceSimple = generatePayspecInvoiceSimple;

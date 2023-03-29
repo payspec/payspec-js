@@ -23,6 +23,12 @@ describe('Payspec Js', () => {
         });
         let valid = (0, index_1.validateInvoice)(mockinvoice);
         (0, chai_1.expect)(valid).to.eql(true);
+        (0, chai_1.expect)(mockinvoice.invoiceUUID).to.exist;
+    });
+    it('should gen random nonce', () => {
+        let nonce = (0, index_1.getPayspecRandomNonce)();
+        console.log({ nonce });
+        (0, chai_1.expect)(nonce).to.be.a('string');
     });
 });
 //# sourceMappingURL=payspec.test.js.map
