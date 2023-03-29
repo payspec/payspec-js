@@ -1,18 +1,26 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const deploymentFiles = {
-    rinkeby: require('../../deployments/rinkeby/Payspec.json'),
-    //mainnet: require('../deployments/mainnet/Payspec.json')
-};
-class ContractsHelper {
-    /*
-    Get the deployment data for a contract, including the address and abi
-    */
-    static getDeploymentConfig(networkName, contractName) {
-        //@ts-ignore 
-        let contents = deploymentFiles[networkName];
-        return contents;
+exports.getNetworkNameFromChainId = exports.getDeploymentConfig = void 0;
+const file_helper_1 = require("./file-helper");
+/*
+Get the deployment data for a contract, including the address and abi
+*/
+function getDeploymentConfig(networkName, contractName) {
+    if (!contractName)
+        contractName = 'Payspec';
+    let f = (0, file_helper_1.readJSONFile)(`deployments/${networkName}/${contractName}.json`);
+    if (!f.address || !f.abi)
+        throw new Error('Could not load deployment file from Payspec');
+    return f;
+}
+exports.getDeploymentConfig = getDeploymentConfig;
+function getNetworkNameFromChainId(chainId) {
+    switch (chainId) {
+        case 1: return 'mainnet';
+        case 4: return 'rinkeby';
+        case 5: return 'goerli';
+        default: return 'unknown';
     }
 }
-exports.default = ContractsHelper;
+exports.getNetworkNameFromChainId = getNetworkNameFromChainId;
 //# sourceMappingURL=contracts-helper.js.map

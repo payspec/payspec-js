@@ -12,13 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userPayInvoice = exports.parseStringifiedArray = exports.generateInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractDeployment = exports.ETH_ADDRESS = void 0;
+exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.parseStringifiedArray = exports.generateInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractDeployment = exports.ETH_ADDRESS = void 0;
 const ethers_1 = require("ethers");
 const web3_utils_1 = __importDefault(require("web3-utils"));
-const contracts_helper_1 = __importDefault(require("./lib/contracts-helper"));
+const contracts_helper_1 = require("./lib/contracts-helper");
 exports.ETH_ADDRESS = "0x0000000000000000000000000000000000000010";
 function getPayspecContractDeployment(networkName) {
-    return contracts_helper_1.default.getDeploymentConfig(networkName);
+    return (0, contracts_helper_1.getDeploymentConfig)(networkName);
 }
 exports.getPayspecContractDeployment = getPayspecContractDeployment;
 function getPayspecRandomNonce(size) {
@@ -51,6 +51,123 @@ function parseStringifiedArray(str) {
     return JSON.parse(str);
 }
 exports.parseStringifiedArray = parseStringifiedArray;
+function validateInvoice(invoiceData) {
+    const requiredFields = [
+        'payspecContractAddress',
+        'description',
+        'nonce',
+        'token',
+        'totalAmountDue',
+        'payToArrayStringified',
+        'amountsDueArrayStringified',
+        'expiresAt'
+    ];
+    //all keys must exist
+    const invoiceFields = Object.keys(invoiceData);
+    for (let i = 0; i < requiredFields.length; i++) {
+        if (!invoiceFields.includes(requiredFields[i])) {
+            throw new Error('Missing required field: ' + requiredFields[i]);
+        }
+    }
+    //token must be an address 
+    if (!web3_utils_1.default.isAddress(invoiceData.token))
+        throw new Error('token must be an address');
+    //pay to array stringified should be valid 
+    let payToArray = parseStringifiedArray(invoiceData.payToArrayStringified);
+    let amountsDueArray = parseStringifiedArray(invoiceData.amountsDueArrayStringified);
+    if (payToArray.length != amountsDueArray.length)
+        throw new Error('payToArrayStringified and amountsDueArrayStringified must be same length');
+    if (!Array.isArray(payToArray))
+        throw new Error('payToArrayStringified must be an array');
+    if (!Array.isArray(amountsDueArray))
+        throw new Error('amountsDueArrayStringified must be an array');
+    //each pay to address must be valid
+    payToArray.forEach((payToAddress) => {
+        if (!web3_utils_1.default.isAddress(payToAddress))
+            throw new Error('payToAddress must be an address');
+    });
+    //total amount due must be equal to sum of amounts due array
+    let totalAmountDue = ethers_1.BigNumber.from(invoiceData.totalAmountDue);
+    let sumAmountsDue = ethers_1.BigNumber.from(0);
+    amountsDueArray.forEach((amountDue) => {
+        sumAmountsDue = sumAmountsDue.add(ethers_1.BigNumber.from(amountDue));
+    });
+    if (!totalAmountDue.eq(sumAmountsDue))
+        throw new Error('totalAmountDue must be equal to sum of amountsDueArray');
+    return true;
+}
+exports.validateInvoice = validateInvoice;
+function getPayspecContractAddressFromChainId(chainId) {
+    const networkName = (0, contracts_helper_1.getNetworkNameFromChainId)(chainId);
+    const contractDeployment = getPayspecContractDeployment(networkName);
+    return contractDeployment.address;
+}
+exports.getPayspecContractAddressFromChainId = getPayspecContractAddressFromChainId;
+//use gpt to write test for this 
+function getPayspecPaymentDataFromPaymentsArray(elements) {
+    let totalAmountDue = ethers_1.BigNumber.from(0);
+    let payToArray = [];
+    let amountsDueArray = [];
+    elements.forEach((element) => {
+        totalAmountDue = totalAmountDue.add(ethers_1.BigNumber.from(element.amountDue));
+        payToArray.push(element.payTo);
+        amountsDueArray.push(ethers_1.BigNumber.from(element.amountDue).toString());
+    });
+    return {
+        totalAmountDue: totalAmountDue.toString(),
+        payToArrayStringified: JSON.stringify(payToArray),
+        amountsDueArrayStringified: JSON.stringify(amountsDueArray)
+    };
+}
+exports.getPayspecPaymentDataFromPaymentsArray = getPayspecPaymentDataFromPaymentsArray;
+//use gpt to write test for this 
+function getPayspecExpiresInDelta(delta, timeUnits) {
+    let currentTimeSeconds = Math.floor(Date.now() / 1000);
+    if (!timeUnits)
+        timeUnits = 'seconds';
+    let deltaSeconds = 0;
+    switch (timeUnits) {
+        case 'seconds':
+            deltaSeconds = delta;
+            break;
+        case 'minutes':
+            deltaSeconds = delta * 60;
+            break;
+        case 'hours':
+            deltaSeconds = delta * 60 * 60;
+            break;
+        case 'days':
+            deltaSeconds = delta * 60 * 60 * 24;
+            break;
+        case 'weeks':
+            deltaSeconds = delta * 60 * 60 * 24 * 7;
+            break;
+        case 'months':
+            deltaSeconds = delta * 60 * 60 * 24 * 7 * 30;
+            break;
+    }
+    return currentTimeSeconds + deltaSeconds;
+}
+exports.getPayspecExpiresInDelta = getPayspecExpiresInDelta;
+function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paymentsArray }) {
+    const payspecContractAddress = getPayspecContractAddressFromChainId(chainId);
+    const nonce = getPayspecRandomNonce();
+    const expiresAt = getPayspecExpiresInDelta(50000, 'seconds');
+    const { totalAmountDue, payToArrayStringified, amountsDueArrayStringified } = getPayspecPaymentDataFromPaymentsArray(paymentsArray);
+    const invoice = {
+        payspecContractAddress: payspecContractAddress,
+        description,
+        nonce,
+        token: tokenAddress,
+        totalAmountDue,
+        payToArrayStringified,
+        amountsDueArrayStringified,
+        expiresAt
+    };
+    return invoice;
+}
+exports.generatePayspecInvoiceSimple = generatePayspecInvoiceSimple;
+//---------
 function userPayInvoice(from, invoiceData, provider, netName) {
     return __awaiter(this, void 0, void 0, function* () {
         let networkName = netName ? netName : 'mainnet';
