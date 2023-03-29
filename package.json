@@ -3,6 +3,11 @@
   "version": "0.23.0",
   "description": "Deterministic invoicing and payments for Web3",
   "main": "dist/index.js",
+ 
+  "files": [
+    "dist"
+  ],
+
   "scripts": {
     "test": "NODE_ENV=test TS_NODE_PROJECT=\"tsconfig.testing.json\" mocha --require ts-node/register 'test/**/*.ts' --timeout 25000",
     "build": "tsc"
