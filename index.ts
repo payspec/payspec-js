@@ -9,6 +9,10 @@ import { BigNumber , Contract, ethers, utils } from "ethers";
 import  {getDeploymentConfig, getNetworkNameFromChainId,getProtocolFeeConfig,getTokenFromConfig} from "./lib/contracts-helper";
 
  
+export interface ProtocolFeeConfig{
+  protocolFeePercentBasisPoints:number,
+  protocolFeeRecipientAddress:string
+}
 
 export interface PayspecInvoice {
 
@@ -100,69 +104,170 @@ export function applyInvoiceUUID(invoice: PayspecInvoice) : PayspecInvoice {
 
 }
 
-export function includesProtocolFee(invoice:PayspecInvoice) : boolean {
-
-  const protocolFeeConfig = getProtocolFeeConfig();
-
-  const payToArray = parseStringifiedArray(invoice.payToArrayStringified)
-  const amountsDueArray = parseStringifiedArray(invoice.amountsDueArrayStringified)
-
-
-
-  //calc total amt due 
-  let originalTotalAmountDue = BigNumber.from(0)
-
-
-  const originalPaymentElementArray:PayspecPaymentElement[] = []
-
-  const updatedPaymentElementArray:PayspecPaymentElement[] = []
-
-  for(let i=0;i<payToArray.length;i++){
-    originalPaymentElementArray.push({
-      payTo: payToArray[i],
-      amountDue: amountsDueArray[i]
-    })
-
-    originalTotalAmountDue = originalTotalAmountDue.add(BigNumber.from(amountsDueArray))
-  }
-
-
-
-  //make sure total amount due stays same 
-
-
-
-}
 
 export function applyProtocolFee(invoice: PayspecInvoice) : PayspecInvoice {
 
   if(includesProtocolFee(invoice)) return invoice;
+  ;
 
 
-  const protocolFeeConfig = getProtocolFeeConfig();
+  let paymentElements = getPaymentElementsFromInvoice(invoice)
+  let originalTotalAmountDue:string = getTotalAmountDueFromPaymentElementsArray(paymentElements)
 
 
-    //calc total amt due 
-    let originalTotalAmountDue = BigNumber.from(0)
+  // add the protocol fee to the payment elements 
 
+  let updatedPaymentElements = applyProtocolFeeToPaymentElements(paymentElements)
 
-    const originalPaymentElementArray:PayspecPaymentElement[] = []
-  
-    const updatedPaymentElementArray:PayspecPaymentElement[] = []
-  
-    for(let i=0;i<payToArray.length;i++){
-      originalPaymentElementArray.push({
-        payTo: payToArray[i],
-        amountDue: amountsDueArray[i]
-      })
-  
-      originalTotalAmountDue = originalTotalAmountDue.add(BigNumber.from(amountsDueArray))
-    }
-  
-  
-  
-    //make sure total amount due stays same 
+  let { totalAmountDue,
+    payToArrayStringified,
+    amountsDueArrayStringified 
+  } = getPayspecPaymentDataFromPaymentsArray(updatedPaymentElements)
+
+  if(totalAmountDue != originalTotalAmountDue) throw new Error('Unable to apply protocol fee: total amount update mismatch.  This is a bug in the payspec javascript lib.')
+
+  let updatedInvoice : PayspecInvoice = Object.assign( 
+    invoice, 
+      {
+      totalAmountDue,
+      payToArrayStringified,
+      amountsDueArrayStringified 
+    } 
+  )
+
+  return updatedInvoice
+ 
    
+
+}
+
+ 
+
+export function applyProtocolFeeToPaymentElements(paymentElements:PayspecPaymentElement[]) : PayspecPaymentElement[] {
+
+  const protocolFeeConfig:ProtocolFeeConfig= getProtocolFeeConfig();
+
+  let originalTotalAmountDue:string = getTotalAmountDueFromPaymentElementsArray(paymentElements)
+
+  let updatedPaymentElements:PayspecPaymentElement[] = []
+
+  for(let element of paymentElements){
+
+    //make sure rounding works well here 
+    let amountDueLessFees = BigNumber.from(element.amountDue).mul(10000 - protocolFeeConfig.protocolFeePercentBasisPoints).div(10000)
+
+    updatedPaymentElements.push({
+      payTo: element.payTo,
+      amountDue:  amountDueLessFees.toString()
+    })
+
+  } 
+
+  let totalAmountDueLessFees = getTotalAmountDueFromPaymentElementsArray(updatedPaymentElements)
+
+
+  let protocolFeeAmountDue = BigNumber.from(originalTotalAmountDue).sub(BigNumber.from(totalAmountDueLessFees)).toString()
+ 
+  updatedPaymentElements.push({
+    payTo: protocolFeeConfig.protocolFeeRecipientAddress,
+    amountDue: protocolFeeAmountDue
+  })
+
+  return updatedPaymentElements
+
+}
+
+
+/*
+
+*/
+export function calculateSubtotalLessProtocolFee(paymentElements:PayspecPaymentElement[]) : string {
+
+  const protocolFeeConfig:ProtocolFeeConfig= getProtocolFeeConfig();
+
+ 
+  let updatedPaymentElements:PayspecPaymentElement[] = []
+
+  for(let element of paymentElements){
+
+    //make sure rounding works well here 
+    let amountDueLessFees = BigNumber.from(element.amountDue).mul(10000 - protocolFeeConfig.protocolFeePercentBasisPoints).div(10000)
+
+    updatedPaymentElements.push({
+      payTo: element.payTo,
+      amountDue:  amountDueLessFees.toString()
+    })
+
+  } 
+
+  let totalAmountDueLessFees = getTotalAmountDueFromPaymentElementsArray(updatedPaymentElements)
+
+  return totalAmountDueLessFees
+}
+
+
+export function includesProtocolFee(invoice:PayspecInvoice) : boolean {
+
+  
+  let paymentElements = getPaymentElementsFromInvoice(invoice)
+  
+  let originalTotalAmountDue = getTotalAmountDueFromPaymentElementsArray(paymentElements)
+  
+  let totalAmountDueLessFees = calculateSubtotalLessProtocolFee(paymentElements)
+
+  let protocolFeeAmount = BigNumber.from(originalTotalAmountDue).sub(BigNumber.from(totalAmountDueLessFees)).toString()
+
+  for(let element of paymentElements){
+    if(element.payTo == getProtocolFeeConfig().protocolFeeRecipient && element.amountDue == protocolFeeAmount){
+      return true
+    }
+  }
+
+  return false 
+
+}
+
+export function getPaymentElementsFromInvoice( invoice:PayspecInvoice ) : PayspecPaymentElement[] {
+
+  const payToArray:string[] = parseStringifiedArray(invoice.payToArrayStringified)
+  const amountsDueArray:string[] = parseStringifiedArray(invoice.amountsDueArrayStringified)
+
+
+  let result:PayspecPaymentElement[] = []
+
+  for(let i =0; i < payToArray.length; i++){
+    result.push({
+      payTo: payToArray[i],
+      amountDue: amountsDueArray[i]
+    })
+
+  }
+
+  return result
+
+}
+
+export function getTotalAmountDueFromPaymentElementsArray( paymentElementsArray:PayspecPaymentElement[] ) : string {
+
+  let totalAmountDue = BigNumber.from(0)
+
+  for(let element of paymentElementsArray){
+    totalAmountDue = totalAmountDue.add(BigNumber.from(element.amountDue))
+  }
+
+  return totalAmountDue.toString()
+
+}
+
+export function getTotalAmountDueFromAmountsDueArray( amountsDueArray:string[] ) : string {
+
+  let totalAmountDue = BigNumber.from(0)
+
+  for(let amountDue of amountsDueArray){
+    totalAmountDue = totalAmountDue.add(BigNumber.from(amountDue))
+  }
+
+  return totalAmountDue.toString()
 
 }
 
