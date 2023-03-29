@@ -1,5 +1,5 @@
 import { expect, should } from 'chai'
-import { Wallet } from 'ethers'
+import { BigNumber, Wallet } from 'ethers'
   
  
 import {
@@ -94,8 +94,90 @@ describe('Payspec Js', () => {
         expect(includesFeeAfter).to.eql(true)
 
      })
+
+     it('should apply protocol fee with odd rounding', ()=>{
+
+        let wallet = Wallet.createRandom()
+ 
+
+        let mockinvoice = generatePayspecInvoiceSimple({
+            chainId: 4,
+            description: 'test',
+            tokenAddress:'0xb6ed7644c69416d67b522e20bc294a9a9b405b31',
+            paymentsArray:[
+                {
+                    payTo: wallet.address,
+                    amountDue: '1000001231512411'
+                }
+            ]
+        })
+
+        let includesFeeBefore = includesProtocolFee(mockinvoice)
+
+        expect(includesFeeBefore).to.eql(false)
+
+        let updatedInvoice = applyProtocolFee(mockinvoice)
+
+        let includesFeeAfter = includesProtocolFee(updatedInvoice)
+ 
+
+        expect(includesFeeAfter).to.eql(true)
+
+     })
+
+
+     //why does this fail ? 
+     it('should apply protocol fee with fuzz test input', ()=>{
+
+        test_protocol_fee_application(BigNumber.from(17))
+
+        test_protocol_fee_application(BigNumber.from(170))
+
+        test_protocol_fee_application(BigNumber.from(1700))
+
+        test_protocol_fee_application(BigNumber.from(1))
+
+        test_protocol_fee_application(BigNumber.from(0))
+
+     })
  
 
  
 
 })
+
+
+function test_protocol_fee_application( amountDue: BigNumber ){
+
+    console.log(`test protocol fee application of amountDue ${amountDue}`)
+
+    let wallet = Wallet.createRandom()
+ 
+
+    let mockinvoice = generatePayspecInvoiceSimple({
+        chainId: 4,
+        description: 'test',
+        tokenAddress:'0xb6ed7644c69416d67b522e20bc294a9a9b405b31',
+        paymentsArray:[
+            {
+                payTo: wallet.address,
+                amountDue: amountDue.toString()
+            }
+        ]
+    })
+
+    let includesFeeBefore = includesProtocolFee(mockinvoice)
+
+    expect(includesFeeBefore).to.eql(false)
+
+    let updatedInvoice = applyProtocolFee(mockinvoice)
+
+
+    console.log({updatedInvoice})
+
+    let includesFeeAfter = includesProtocolFee(updatedInvoice)
+    
+
+    expect(includesFeeAfter).to.eql(true)
+    
+}

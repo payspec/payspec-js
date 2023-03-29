@@ -221,9 +221,10 @@ export function includesProtocolFee(invoice:PayspecInvoice) : boolean {
   let protocolFeeAmount = BigNumber.from(originalTotalAmountDue).sub(BigNumber.from(totalAmountDueLessFees)).toString()
  
   const protocolFeeRecipient = ethers.utils.getAddress(getProtocolFeeConfig().protocolFeeRecipientAddress) 
-
+ 
   for(let element of paymentElements){
-    if( ethers.utils.getAddress(element.payTo) == protocolFeeRecipient && BigNumber.from(element.amountDue).gte( protocolFeeAmount ) ){
+    if( ethers.utils.getAddress(element.payTo) == protocolFeeRecipient
+     && BigNumber.from(element.amountDue).gte( protocolFeeAmount ) ){
       return true
     }
   }
