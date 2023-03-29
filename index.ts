@@ -4,8 +4,8 @@
 export type APICall = (req: any, res: any) => any
  
 import { Web3Provider } from "@ethersproject/providers";
-import { BigNumber , Contract, utils } from "ethers";
-import web3utils from 'web3-utils'
+import { BigNumber , Contract, ethers, utils } from "ethers";
+ 
 import  {getDeploymentConfig, getNetworkNameFromChainId,getTokenFromConfig} from "./lib/contracts-helper";
 
 
@@ -46,11 +46,12 @@ export function getPayspecContractDeployment( networkName: string ): {address:st
 
 }
 
-export function getPayspecRandomNonce (size?:number){
+export function getPayspecRandomNonce (size?:number):string{
 
   if(!size) size = 16;
-   
-  return web3utils.randomHex(size)
+  
+  return BigNumber.from( ethers.utils.randomBytes(size) ).toHexString()
+  
 }
 
 export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
@@ -71,8 +72,14 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
   var expiresAt = {t:'uint', v: invoiceData.expiresAt};
 
   
+  /*
+  test!!
+
+  https://github.com/ethers-io/ethers.js/issues/671
+
+  */
     
-  let result =  web3utils.soliditySha3(
+ /* let result =  ethers.utils.solidityKeccak256(
     payspecContractAddress,
     description, 
     nonce,
@@ -80,7 +87,13 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
     totalAmountDue,
     payTo,
     amountsDue, 
-    expiresAt );
+    expiresAt 
+    );*/
+
+    const result = ethers.utils.solidityKeccak256(
+      ['address', 'string', 'uint256', 'address', 'uint256', 'address[]', 'uint256[]', 'uint256'],
+      [payspecContractAddress.v, description.v, nonce.v, token.v, totalAmountDue.v, payTo.v, amountsDue.v, expiresAt.v]
+    );
 
     return result ? result: undefined
 } 
@@ -132,7 +145,7 @@ export function validateInvoice(invoiceData: PayspecInvoice): boolean {
   }
 
   //token must be an address 
-  if(!web3utils.isAddress(invoiceData.token)) throw new Error('token must be an address')
+  if(!ethers.utils.isAddress(invoiceData.token)) throw new Error('token must be an address')
 
   //pay to array stringified should be valid 
   let payToArray = parseStringifiedArray(invoiceData.payToArrayStringified)
@@ -145,7 +158,7 @@ export function validateInvoice(invoiceData: PayspecInvoice): boolean {
 
   //each pay to address must be valid
   payToArray.forEach( (payToAddress) => {
-    if(!web3utils.isAddress(payToAddress)) throw new Error('payToAddress must be an address')
+    if(!ethers.utils.isAddress(payToAddress)) throw new Error('payToAddress must be an address')
   })
 
   //total amount due must be equal to sum of amounts due array
@@ -261,6 +274,8 @@ export function generatePayspecInvoiceSimple(
       amountsDueArrayStringified,
       expiresAt
   }
+
+  invoice.invoiceUUID = getPayspecInvoiceUUID(invoice)
 
   return invoice 
 

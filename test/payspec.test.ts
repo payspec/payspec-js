@@ -46,9 +46,21 @@ describe('Payspec Js', () => {
 
         expect(valid).to.eql(true)
 
+        expect(mockinvoice.invoiceUUID).to.exist
+
 
     })
-    
+
+    it('should gen random nonce', () => {
+
+        let nonce = getPayspecRandomNonce()
+
+        console.log({nonce})
+
+        expect(nonce).to.be.a('string')
+
+     })
+ 
 
  
 
