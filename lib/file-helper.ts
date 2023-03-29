@@ -6,8 +6,16 @@
 const fs = require('fs')
 const path = require('path')
 
-import web3utils from 'web3-utils'
  
+
+export function readJSONFile(uri:string){
+
+    let input =  fs.readFileSync(path.resolve( uri),   {encoding:'utf8', flag:'r'}); 
+
+    return JSON.parse(input)
+}
+ 
+/*
   
 export default class FileHelper{
 
@@ -50,4 +58,4 @@ export default class FileHelper{
     }
 
 
-}
+}*/

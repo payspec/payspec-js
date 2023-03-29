@@ -6,7 +6,7 @@ export type APICall = (req: any, res: any) => any
 import { Web3Provider } from "@ethersproject/providers";
 import { BigNumber , Contract, utils } from "ethers";
 import web3utils from 'web3-utils'
-import ContractsHelper from "./lib/contracts-helper";
+import  {getDeploymentConfig, getNetworkNameFromChainId} from "./lib/contracts-helper";
 
 
 /*
@@ -30,13 +30,19 @@ export interface PayspecInvoice {
 }
 
 
+export interface PayspecPaymentElement {
+  payTo: string, //address
+  amountDue: string //amount in raw units (wei) 
+}
+
+
 export const ETH_ADDRESS = "0x0000000000000000000000000000000000000010" 
 
 
 export function getPayspecContractDeployment( networkName: string ): {address:string, abi:any }{
  
 
-  return ContractsHelper.getDeploymentConfig(networkName)
+  return getDeploymentConfig(networkName)
 
 }
 
@@ -90,6 +96,165 @@ export function generateInvoiceUUID(invoiceData: PayspecInvoice) : PayspecInvoic
 export function parseStringifiedArray(str: string): any[]{
   return JSON.parse( str  )
 }
+
+ 
+export function validateInvoice(invoiceData: PayspecInvoice): boolean {
+
+  const requiredFields = [
+    'payspecContractAddress',
+    'description',
+    'nonce',
+    'token',
+    'totalAmountDue',
+    'payToArrayStringified',
+    'amountsDueArrayStringified',
+    'expiresAt'
+  ];
+
+  //all keys must exist
+  const invoiceFields = Object.keys(invoiceData);
+  for (let i = 0; i < requiredFields.length; i++) {
+    if (!invoiceFields.includes(requiredFields[i])) {
+      throw new Error('Missing required field: ' + requiredFields[i]);
+    }
+  }
+
+  //token must be an address 
+  if(!web3utils.isAddress(invoiceData.token)) throw new Error('token must be an address')
+
+  //pay to array stringified should be valid 
+  let payToArray = parseStringifiedArray(invoiceData.payToArrayStringified)
+  let amountsDueArray = parseStringifiedArray(invoiceData.amountsDueArrayStringified)
+
+
+  if(payToArray.length != amountsDueArray.length) throw new Error('payToArrayStringified and amountsDueArrayStringified must be same length')
+  if(!Array.isArray(payToArray)) throw new Error('payToArrayStringified must be an array')
+  if(!Array.isArray(amountsDueArray)) throw new Error('amountsDueArrayStringified must be an array')
+
+  //each pay to address must be valid
+  payToArray.forEach( (payToAddress) => {
+    if(!web3utils.isAddress(payToAddress)) throw new Error('payToAddress must be an address')
+  })
+
+  //total amount due must be equal to sum of amounts due array
+  let totalAmountDue = BigNumber.from(invoiceData.totalAmountDue)
+  let sumAmountsDue = BigNumber.from(0)
+  amountsDueArray.forEach( (amountDue) => {
+    sumAmountsDue = sumAmountsDue.add( BigNumber.from(amountDue) )
+  })
+
+  if(!totalAmountDue.eq(sumAmountsDue)) throw new Error('totalAmountDue must be equal to sum of amountsDueArray')
+
+  return true;
+ 
+}
+
+export function getPayspecContractAddressFromChainId(chainId: number): string {
+
+  const networkName = getNetworkNameFromChainId(chainId)
+  
+  const contractDeployment = getPayspecContractDeployment(networkName)
+
+  return contractDeployment.address
+
+}
+
+
+//use gpt to write test for this 
+export function getPayspecPaymentDataFromPaymentsArray(elements:PayspecPaymentElement[]): {
+  totalAmountDue:string
+  payToArrayStringified:string 
+  amountsDueArrayStringified:string
+}  {
+
+
+  let totalAmountDue = BigNumber.from(0)
+  let payToArray:string[] = []
+  let amountsDueArray:string[] = []
+
+  elements.forEach( (element) => {
+    totalAmountDue = totalAmountDue.add( BigNumber.from(element.amountDue) )
+    payToArray.push(element.payTo)
+    amountsDueArray.push( BigNumber.from(element.amountDue).toString() )
+  })
+
+  return {
+    totalAmountDue: totalAmountDue.toString(),
+    payToArrayStringified: JSON.stringify(payToArray),
+    amountsDueArrayStringified: JSON.stringify(amountsDueArray)
+  }
+   
+}
+
+//use gpt to write test for this 
+export function getPayspecExpiresInDelta(delta:number, timeUnits?:string) : number {
+
+  let currentTimeSeconds = Math.floor(Date.now() / 1000)
+
+  if(!timeUnits) timeUnits = 'seconds'
+
+  let deltaSeconds = 0
+
+  switch(timeUnits){
+    case 'seconds': deltaSeconds = delta; break;
+    case 'minutes': deltaSeconds = delta * 60; break;
+    case 'hours': deltaSeconds = delta * 60 * 60; break;
+    case 'days': deltaSeconds = delta * 60 * 60 * 24; break;
+    case 'weeks': deltaSeconds = delta * 60 * 60 * 24 * 7; break;
+    case 'months': deltaSeconds = delta * 60 * 60 * 24 * 7 * 30; break;
+  }
+
+  return currentTimeSeconds + deltaSeconds
+}
+
+
+export function generatePayspecInvoiceSimple( 
+  {
+    chainId,
+    description,
+    tokenAddress,
+    paymentsArray
+  }:{
+
+    chainId: number,
+    description: string,
+    tokenAddress: string,
+    paymentsArray: PayspecPaymentElement[]
+
+  }
+
+) : PayspecInvoice{
+
+
+  const payspecContractAddress = getPayspecContractAddressFromChainId(chainId)
+
+  const nonce = getPayspecRandomNonce()
+
+  const expiresAt = getPayspecExpiresInDelta( 50000 , 'seconds' )
+
+
+  const {
+      totalAmountDue, 
+      payToArrayStringified, 
+      amountsDueArrayStringified
+  } = getPayspecPaymentDataFromPaymentsArray(paymentsArray)
+
+  const invoice:PayspecInvoice = {
+      payspecContractAddress: payspecContractAddress,
+      description, //can use product id here
+      nonce,
+      token: tokenAddress,
+      totalAmountDue,
+      payToArrayStringified,
+      amountsDueArrayStringified,
+      expiresAt
+  }
+
+  return invoice 
+
+}
+
+//---------
 
 
 export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, provider: Web3Provider, netName?: string ) : Promise<{success:boolean, error?:any, data?: any}> {
