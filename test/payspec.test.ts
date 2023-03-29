@@ -4,11 +4,13 @@ import { BigNumber, Wallet } from 'ethers'
  
 import {
     applyProtocolFee,
+    calculateSubtotalLessProtocolFee,
     generatePayspecInvoiceSimple,
     getPayspecContractDeployment, 
     getPayspecRandomNonce, 
     includesProtocolFee, 
     PayspecInvoice,
+    PayspecPaymentElement,
     validateInvoice
 
 } from '../index'
@@ -125,9 +127,31 @@ describe('Payspec Js', () => {
 
      })
 
+     it('should calc subtotal less protocol fee', ()=>{
+
+        let wallet = Wallet.createRandom()
+ 
+        let paymentElements:PayspecPaymentElement[] = [
+            {
+                payTo: wallet.address,
+                amountDue: '17'
+            }
+        ]
+        let subtotal = calculateSubtotalLessProtocolFee(paymentElements)
+
+        expect(subtotal).to.eql('16')
+
+
+
+     })
+
 
      //why does this fail ? 
-     it('should apply protocol fee with fuzz test input', ()=>{
+     it('should apply protocol fee with fuzzy test inputs', ()=>{
+
+        test_protocol_fee_application(BigNumber.from(0))
+
+        test_protocol_fee_application(BigNumber.from(1)) 
 
         test_protocol_fee_application(BigNumber.from(17))
 
@@ -135,9 +159,6 @@ describe('Payspec Js', () => {
 
         test_protocol_fee_application(BigNumber.from(1700))
 
-        test_protocol_fee_application(BigNumber.from(1))
-
-        test_protocol_fee_application(BigNumber.from(0))
 
      })
  
@@ -145,6 +166,7 @@ describe('Payspec Js', () => {
  
 
 })
+
 
 
 function test_protocol_fee_application( amountDue: BigNumber ){
@@ -179,5 +201,9 @@ function test_protocol_fee_application( amountDue: BigNumber ){
     
 
     expect(includesFeeAfter).to.eql(true)
+
+    let isValid = validateInvoice(updatedInvoice);
+
+    expect(isValid).to.eql(true)
     
 }

@@ -182,7 +182,7 @@ export function applyProtocolFeeToPaymentElements(paymentElements:PayspecPayment
 
 
 /*
-
+  rounding is busted for bignumber .. 
 */
 export function calculateSubtotalLessProtocolFee(paymentElements:PayspecPaymentElement[]) : string {
 
@@ -209,17 +209,37 @@ export function calculateSubtotalLessProtocolFee(paymentElements:PayspecPaymentE
 }
 
 
+/*
+  this is busted 
+*/
 export function includesProtocolFee(invoice:PayspecInvoice) : boolean {
+  const protocolFeeConfig:ProtocolFeeConfig= getProtocolFeeConfig();
+
 
   
   let paymentElements = getPaymentElementsFromInvoice(invoice)
   
   let originalTotalAmountDue = getTotalAmountDueFromPaymentElementsArray(paymentElements)
-  
-  let totalAmountDueLessFees = calculateSubtotalLessProtocolFee(paymentElements)
 
-  let protocolFeeAmount = BigNumber.from(originalTotalAmountDue).sub(BigNumber.from(totalAmountDueLessFees)).toString()
- 
+
+  //why is this 2 ?? 
+  //let totalAmountDueLessFees = calculateSubtotalLessProtocolFee(paymentElements)
+
+  let protocolFeePercentBasisPoints = protocolFeeConfig.protocolFeePercentBasisPoints
+ // let protocolFeeAmount = BigNumber.from(originalTotalAmountDue).sub(BigNumber.from(totalAmountDueLessFees)).toString()
+  
+  let totalAmountDueLessFees = BigNumber.from(invoice.totalAmountDue).mul(10000).mul(10000 - protocolFeePercentBasisPoints).div(10000).div(10000)
+
+  let protocolFeeAmount = BigNumber.from(originalTotalAmountDue).sub(totalAmountDueLessFees)
+
+  console.log('payment elements' , JSON.stringify(paymentElements))
+
+  console.log('includes protocol fee... ',
+    originalTotalAmountDue.toString(),
+    totalAmountDueLessFees.toString() ,
+    protocolFeeAmount.toString()
+  )
+
   const protocolFeeRecipient = ethers.utils.getAddress(getProtocolFeeConfig().protocolFeeRecipientAddress) 
  
   for(let element of paymentElements){
