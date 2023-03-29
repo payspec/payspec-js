@@ -47,3 +47,7 @@
 
  
       
+export function getProtocolFeeConfig( ){
+
+  return readJSONFile('config/protocol-fee-config.json')
+}

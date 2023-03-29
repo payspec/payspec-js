@@ -6,7 +6,7 @@ export type APICall = (req: any, res: any) => any
 import { Web3Provider } from "@ethersproject/providers";
 import { BigNumber , Contract, ethers, utils } from "ethers";
  
-import  {getDeploymentConfig, getNetworkNameFromChainId,getTokenFromConfig} from "./lib/contracts-helper";
+import  {getDeploymentConfig, getNetworkNameFromChainId,getProtocolFeeConfig,getTokenFromConfig} from "./lib/contracts-helper";
 
  
 
@@ -94,11 +94,76 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
 } 
 
 
-export function generateInvoiceUUID(invoiceData: PayspecInvoice) : PayspecInvoice {
+export function applyInvoiceUUID(invoice: PayspecInvoice) : PayspecInvoice {
 
-  return Object.assign(invoiceData, {invoiceUUID: getPayspecInvoiceUUID(invoiceData)})
+  return Object.assign(invoice, {invoiceUUID: getPayspecInvoiceUUID(invoice)})
 
+}
+
+export function includesProtocolFee(invoice:PayspecInvoice) : boolean {
+
+  const protocolFeeConfig = getProtocolFeeConfig();
+
+  const payToArray = parseStringifiedArray(invoice.payToArrayStringified)
+  const amountsDueArray = parseStringifiedArray(invoice.amountsDueArrayStringified)
+
+
+
+  //calc total amt due 
+  let originalTotalAmountDue = BigNumber.from(0)
+
+
+  const originalPaymentElementArray:PayspecPaymentElement[] = []
+
+  const updatedPaymentElementArray:PayspecPaymentElement[] = []
+
+  for(let i=0;i<payToArray.length;i++){
+    originalPaymentElementArray.push({
+      payTo: payToArray[i],
+      amountDue: amountsDueArray[i]
+    })
+
+    originalTotalAmountDue = originalTotalAmountDue.add(BigNumber.from(amountsDueArray))
+  }
+
+
+
+  //make sure total amount due stays same 
+
+
+
+}
+
+export function applyProtocolFee(invoice: PayspecInvoice) : PayspecInvoice {
+
+  if(includesProtocolFee(invoice)) return invoice;
+
+
+  const protocolFeeConfig = getProtocolFeeConfig();
+
+
+    //calc total amt due 
+    let originalTotalAmountDue = BigNumber.from(0)
+
+
+    const originalPaymentElementArray:PayspecPaymentElement[] = []
   
+    const updatedPaymentElementArray:PayspecPaymentElement[] = []
+  
+    for(let i=0;i<payToArray.length;i++){
+      originalPaymentElementArray.push({
+        payTo: payToArray[i],
+        amountDue: amountsDueArray[i]
+      })
+  
+      originalTotalAmountDue = originalTotalAmountDue.add(BigNumber.from(amountsDueArray))
+    }
+  
+  
+  
+    //make sure total amount due stays same 
+   
+
 }
 
 export function parseStringifiedArray(str: string): any[]{
