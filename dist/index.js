@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.parseStringifiedArray = exports.generateInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractDeployment = exports.ETH_ADDRESS = void 0;
+exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.generateInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractDeployment = exports.ETH_ADDRESS = void 0;
 const ethers_1 = require("ethers");
 const web3_utils_1 = __importDefault(require("web3-utils"));
 const contracts_helper_1 = require("./lib/contracts-helper");
@@ -51,6 +51,11 @@ function parseStringifiedArray(str) {
     return JSON.parse(str);
 }
 exports.parseStringifiedArray = parseStringifiedArray;
+function getCurrencyTokenAddress({ tokenName, chainId }) {
+    let networkName = (0, contracts_helper_1.getNetworkNameFromChainId)(chainId);
+    return (0, contracts_helper_1.getTokenFromConfig)({ tokenName, networkName }).address;
+}
+exports.getCurrencyTokenAddress = getCurrencyTokenAddress;
 function validateInvoice(invoiceData) {
     const requiredFields = [
         'payspecContractAddress',

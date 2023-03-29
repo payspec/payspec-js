@@ -6,7 +6,7 @@ export type APICall = (req: any, res: any) => any
 import { Web3Provider } from "@ethersproject/providers";
 import { BigNumber , Contract, utils } from "ethers";
 import web3utils from 'web3-utils'
-import  {getDeploymentConfig, getNetworkNameFromChainId} from "./lib/contracts-helper";
+import  {getDeploymentConfig, getNetworkNameFromChainId,getTokenFromConfig} from "./lib/contracts-helper";
 
 
 /*
@@ -95,6 +95,18 @@ export function generateInvoiceUUID(invoiceData: PayspecInvoice) : PayspecInvoic
 
 export function parseStringifiedArray(str: string): any[]{
   return JSON.parse( str  )
+}
+
+
+export function getCurrencyTokenAddress({
+  tokenName,chainId
+}:{tokenName:string, 
+  chainId:number}) : string {
+    
+    let networkName = getNetworkNameFromChainId(chainId)
+
+    return getTokenFromConfig({tokenName, networkName}).address
+
 }
 
  

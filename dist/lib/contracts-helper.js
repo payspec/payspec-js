@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getNetworkNameFromChainId = exports.getDeploymentConfig = void 0;
+exports.getTokenFromConfig = exports.getNetworkNameFromChainId = exports.getDeploymentConfig = void 0;
 const file_helper_1 = require("./file-helper");
 /*
 Get the deployment data for a contract, including the address and abi
@@ -23,4 +23,12 @@ function getNetworkNameFromChainId(chainId) {
     }
 }
 exports.getNetworkNameFromChainId = getNetworkNameFromChainId;
+function getTokenFromConfig({ tokenName, networkName }) {
+    let tokensConfig = (0, file_helper_1.readJSONFile)(`config/tokens.json`);
+    let tokenData = tokensConfig[networkName.toLowerCase()][tokenName.toLowerCase()];
+    if (!tokenData.address || !tokenData.decimals || !tokenData.symbol)
+        throw new Error('Could not load token config from Payspec');
+    return tokenData;
+}
+exports.getTokenFromConfig = getTokenFromConfig;
 //# sourceMappingURL=contracts-helper.js.map

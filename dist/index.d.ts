@@ -24,6 +24,10 @@ export declare function getPayspecRandomNonce(size?: number): string;
 export declare function getPayspecInvoiceUUID(invoiceData: PayspecInvoice): string | undefined;
 export declare function generateInvoiceUUID(invoiceData: PayspecInvoice): PayspecInvoice;
 export declare function parseStringifiedArray(str: string): any[];
+export declare function getCurrencyTokenAddress({ tokenName, chainId }: {
+    tokenName: string;
+    chainId: number;
+}): string;
 export declare function validateInvoice(invoiceData: PayspecInvoice): boolean;
 export declare function getPayspecContractAddressFromChainId(chainId: number): string;
 export declare function getPayspecPaymentDataFromPaymentsArray(elements: PayspecPaymentElement[]): {

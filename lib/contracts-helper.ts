@@ -30,5 +30,20 @@
 
   }
 
+  export function getTokenFromConfig(
+  {tokenName,networkName}
+   :{ tokenName:string,
+    networkName:string}
+  ) :{address:string,decimals:number,symbol:string} {
+
+    let tokensConfig = readJSONFile(`config/tokens.json`)
+
+    let tokenData = tokensConfig[networkName.toLowerCase()][tokenName.toLowerCase()]
+
+    if(!tokenData.address || !tokenData.decimals || !tokenData.symbol) throw new Error('Could not load token config from Payspec')
+    
+    return tokenData
+  }
+
  
       
