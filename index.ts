@@ -108,7 +108,7 @@ export function applyInvoiceUUID(invoice: PayspecInvoice) : PayspecInvoice {
 export function applyProtocolFee(invoice: PayspecInvoice) : PayspecInvoice {
 
   if(includesProtocolFee(invoice)) return invoice;
-  ;
+  
 
 
   let paymentElements = getPaymentElementsFromInvoice(invoice)
@@ -126,8 +126,11 @@ export function applyProtocolFee(invoice: PayspecInvoice) : PayspecInvoice {
 
   if(totalAmountDue != originalTotalAmountDue) throw new Error('Unable to apply protocol fee: total amount update mismatch.  This is a bug in the payspec javascript lib.')
 
+
+  let invoiceClone = Object.assign({},invoice)
+
   let updatedInvoice : PayspecInvoice = Object.assign( 
-    invoice, 
+     invoiceClone, 
       {
       totalAmountDue,
       payToArrayStringified,
@@ -216,9 +219,11 @@ export function includesProtocolFee(invoice:PayspecInvoice) : boolean {
   let totalAmountDueLessFees = calculateSubtotalLessProtocolFee(paymentElements)
 
   let protocolFeeAmount = BigNumber.from(originalTotalAmountDue).sub(BigNumber.from(totalAmountDueLessFees)).toString()
+ 
+  const protocolFeeRecipient = ethers.utils.getAddress(getProtocolFeeConfig().protocolFeeRecipientAddress) 
 
   for(let element of paymentElements){
-    if(element.payTo == getProtocolFeeConfig().protocolFeeRecipient && element.amountDue == protocolFeeAmount){
+    if( ethers.utils.getAddress(element.payTo) == protocolFeeRecipient && BigNumber.from(element.amountDue).gte( protocolFeeAmount ) ){
       return true
     }
   }
