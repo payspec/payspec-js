@@ -8,12 +8,7 @@ import { BigNumber , Contract, ethers, utils } from "ethers";
  
 import  {getDeploymentConfig, getNetworkNameFromChainId,getTokenFromConfig} from "./lib/contracts-helper";
 
-
-/*
-const payspecDeployment =  require('../deployments/rinkeby/Payspec.json')
-const payspecABI = payspecDeployment.abi
-export const PayspecContractAddress = payspecDeployment.address
-*/
+ 
 
 export interface PayspecInvoice {
 
