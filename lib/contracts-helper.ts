@@ -3,6 +3,8 @@
  import { readJSONFile } from "./file-helper"
  
  
+ const protocolFeeConfig = require("../config/protocol-fee-config.json")
+ const tokensConfig = require(`../config/tokens.json`)
 
   /*
   Get the deployment data for a contract, including the address and abi 
@@ -36,8 +38,7 @@
     networkName:string}
   ) :{address:string,decimals:number,symbol:string} {
 
-    let tokensConfig = readJSONFile(`config/tokens.json`)
-
+   
     let tokenData = tokensConfig[networkName.toLowerCase()][tokenName.toLowerCase()]
 
     if(!tokenData.address || !tokenData.decimals || !tokenData.symbol) throw new Error('Could not load token config from Payspec')
@@ -49,5 +50,5 @@
       
 export function getProtocolFeeConfig( ){
 
-  return readJSONFile('config/protocol-fee-config.json')
+  return protocolFeeConfig
 }

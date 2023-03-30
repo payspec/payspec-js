@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getProtocolFeeConfig = exports.getTokenFromConfig = exports.getNetworkNameFromChainId = exports.getDeploymentConfig = void 0;
 const file_helper_1 = require("./file-helper");
+const protocolFeeConfig = require("../config/protocol-fee-config.json");
+const tokensConfig = require(`../config/tokens.json`);
 /*
 Get the deployment data for a contract, including the address and abi
 */
@@ -24,7 +26,6 @@ function getNetworkNameFromChainId(chainId) {
 }
 exports.getNetworkNameFromChainId = getNetworkNameFromChainId;
 function getTokenFromConfig({ tokenName, networkName }) {
-    let tokensConfig = (0, file_helper_1.readJSONFile)(`config/tokens.json`);
     let tokenData = tokensConfig[networkName.toLowerCase()][tokenName.toLowerCase()];
     if (!tokenData.address || !tokenData.decimals || !tokenData.symbol)
         throw new Error('Could not load token config from Payspec');
@@ -32,7 +33,7 @@ function getTokenFromConfig({ tokenName, networkName }) {
 }
 exports.getTokenFromConfig = getTokenFromConfig;
 function getProtocolFeeConfig() {
-    return (0, file_helper_1.readJSONFile)('config/protocol-fee-config.json');
+    return protocolFeeConfig;
 }
 exports.getProtocolFeeConfig = getProtocolFeeConfig;
 //# sourceMappingURL=contracts-helper.js.map
