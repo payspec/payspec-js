@@ -11,3 +11,4 @@ export declare function getTokenFromConfig({ tokenName, networkName }: {
     decimals: number;
     symbol: string;
 };
+export declare function getProtocolFeeConfig(): any;

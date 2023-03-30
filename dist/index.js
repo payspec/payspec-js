@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.generateInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractDeployment = exports.ETH_ADDRESS = void 0;
+exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.getTotalAmountDueFromAmountsDueArray = exports.getTotalAmountDueFromPaymentElementsArray = exports.getPaymentElementsFromInvoice = exports.includesProtocolFee = exports.calculateSubtotalLessProtocolFee = exports.applyProtocolFeeToPaymentElements = exports.applyProtocolFee = exports.applyInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractDeployment = exports.ETH_ADDRESS = void 0;
 const ethers_1 = require("ethers");
 const contracts_helper_1 = require("./lib/contracts-helper");
 exports.ETH_ADDRESS = "0x0000000000000000000000000000000000000010";
@@ -55,10 +55,122 @@ function getPayspecInvoiceUUID(invoiceData) {
     return result ? result : undefined;
 }
 exports.getPayspecInvoiceUUID = getPayspecInvoiceUUID;
-function generateInvoiceUUID(invoiceData) {
-    return Object.assign(invoiceData, { invoiceUUID: getPayspecInvoiceUUID(invoiceData) });
+function applyInvoiceUUID(invoice) {
+    return Object.assign(invoice, { invoiceUUID: getPayspecInvoiceUUID(invoice) });
 }
-exports.generateInvoiceUUID = generateInvoiceUUID;
+exports.applyInvoiceUUID = applyInvoiceUUID;
+function applyProtocolFee(invoice) {
+    if (includesProtocolFee(invoice))
+        return invoice;
+    let paymentElements = getPaymentElementsFromInvoice(invoice);
+    let originalTotalAmountDue = getTotalAmountDueFromPaymentElementsArray(paymentElements);
+    // add the protocol fee to the payment elements 
+    let updatedPaymentElements = applyProtocolFeeToPaymentElements(paymentElements);
+    let { totalAmountDue, payToArrayStringified, amountsDueArrayStringified } = getPayspecPaymentDataFromPaymentsArray(updatedPaymentElements);
+    if (totalAmountDue != originalTotalAmountDue)
+        throw new Error('Unable to apply protocol fee: total amount update mismatch.  This is a bug in the payspec javascript lib.');
+    let invoiceClone = Object.assign({}, invoice);
+    let updatedInvoice = Object.assign(invoiceClone, {
+        totalAmountDue,
+        payToArrayStringified,
+        amountsDueArrayStringified
+    });
+    return updatedInvoice;
+}
+exports.applyProtocolFee = applyProtocolFee;
+function applyProtocolFeeToPaymentElements(paymentElements) {
+    const protocolFeeConfig = (0, contracts_helper_1.getProtocolFeeConfig)();
+    let originalTotalAmountDue = getTotalAmountDueFromPaymentElementsArray(paymentElements);
+    let updatedPaymentElements = [];
+    for (let element of paymentElements) {
+        //make sure rounding works well here 
+        let amountDueLessFees = ethers_1.BigNumber.from(element.amountDue).mul(10000 - protocolFeeConfig.protocolFeePercentBasisPoints).div(10000);
+        updatedPaymentElements.push({
+            payTo: element.payTo,
+            amountDue: amountDueLessFees.toString()
+        });
+    }
+    let totalAmountDueLessFees = getTotalAmountDueFromPaymentElementsArray(updatedPaymentElements);
+    let protocolFeeAmountDue = ethers_1.BigNumber.from(originalTotalAmountDue).sub(ethers_1.BigNumber.from(totalAmountDueLessFees)).toString();
+    updatedPaymentElements.push({
+        payTo: protocolFeeConfig.protocolFeeRecipientAddress,
+        amountDue: protocolFeeAmountDue
+    });
+    return updatedPaymentElements;
+}
+exports.applyProtocolFeeToPaymentElements = applyProtocolFeeToPaymentElements;
+/*
+  rounding is busted for bignumber ..
+*/
+function calculateSubtotalLessProtocolFee(paymentElements) {
+    const protocolFeeConfig = (0, contracts_helper_1.getProtocolFeeConfig)();
+    let updatedPaymentElements = [];
+    for (let element of paymentElements) {
+        //make sure rounding works well here 
+        let amountDueLessFees = ethers_1.BigNumber.from(element.amountDue).mul(10000 - protocolFeeConfig.protocolFeePercentBasisPoints).div(10000);
+        updatedPaymentElements.push({
+            payTo: element.payTo,
+            amountDue: amountDueLessFees.toString()
+        });
+    }
+    let totalAmountDueLessFees = getTotalAmountDueFromPaymentElementsArray(updatedPaymentElements);
+    return totalAmountDueLessFees;
+}
+exports.calculateSubtotalLessProtocolFee = calculateSubtotalLessProtocolFee;
+/*
+  this is busted
+*/
+function includesProtocolFee(invoice) {
+    const protocolFeeConfig = (0, contracts_helper_1.getProtocolFeeConfig)();
+    let paymentElements = getPaymentElementsFromInvoice(invoice);
+    let originalTotalAmountDue = getTotalAmountDueFromPaymentElementsArray(paymentElements);
+    //why is this 2 ?? 
+    //let totalAmountDueLessFees = calculateSubtotalLessProtocolFee(paymentElements)
+    let protocolFeePercentBasisPoints = protocolFeeConfig.protocolFeePercentBasisPoints;
+    // let protocolFeeAmount = BigNumber.from(originalTotalAmountDue).sub(BigNumber.from(totalAmountDueLessFees)).toString()
+    let totalAmountDueLessFees = ethers_1.BigNumber.from(invoice.totalAmountDue).mul(10000).mul(10000 - protocolFeePercentBasisPoints).div(10000).div(10000);
+    let protocolFeeAmount = ethers_1.BigNumber.from(originalTotalAmountDue).sub(totalAmountDueLessFees);
+    console.log('payment elements', JSON.stringify(paymentElements));
+    console.log('includes protocol fee... ', originalTotalAmountDue.toString(), totalAmountDueLessFees.toString(), protocolFeeAmount.toString());
+    const protocolFeeRecipient = ethers_1.ethers.utils.getAddress((0, contracts_helper_1.getProtocolFeeConfig)().protocolFeeRecipientAddress);
+    for (let element of paymentElements) {
+        if (ethers_1.ethers.utils.getAddress(element.payTo) == protocolFeeRecipient
+            && ethers_1.BigNumber.from(element.amountDue).gte(protocolFeeAmount)) {
+            return true;
+        }
+    }
+    return false;
+}
+exports.includesProtocolFee = includesProtocolFee;
+function getPaymentElementsFromInvoice(invoice) {
+    const payToArray = parseStringifiedArray(invoice.payToArrayStringified);
+    const amountsDueArray = parseStringifiedArray(invoice.amountsDueArrayStringified);
+    let result = [];
+    for (let i = 0; i < payToArray.length; i++) {
+        result.push({
+            payTo: payToArray[i],
+            amountDue: amountsDueArray[i]
+        });
+    }
+    return result;
+}
+exports.getPaymentElementsFromInvoice = getPaymentElementsFromInvoice;
+function getTotalAmountDueFromPaymentElementsArray(paymentElementsArray) {
+    let totalAmountDue = ethers_1.BigNumber.from(0);
+    for (let element of paymentElementsArray) {
+        totalAmountDue = totalAmountDue.add(ethers_1.BigNumber.from(element.amountDue));
+    }
+    return totalAmountDue.toString();
+}
+exports.getTotalAmountDueFromPaymentElementsArray = getTotalAmountDueFromPaymentElementsArray;
+function getTotalAmountDueFromAmountsDueArray(amountsDueArray) {
+    let totalAmountDue = ethers_1.BigNumber.from(0);
+    for (let amountDue of amountsDueArray) {
+        totalAmountDue = totalAmountDue.add(ethers_1.BigNumber.from(amountDue));
+    }
+    return totalAmountDue.toString();
+}
+exports.getTotalAmountDueFromAmountsDueArray = getTotalAmountDueFromAmountsDueArray;
 function parseStringifiedArray(str) {
     return JSON.parse(str);
 }

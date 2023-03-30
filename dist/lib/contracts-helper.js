@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTokenFromConfig = exports.getNetworkNameFromChainId = exports.getDeploymentConfig = void 0;
+exports.getProtocolFeeConfig = exports.getTokenFromConfig = exports.getNetworkNameFromChainId = exports.getDeploymentConfig = void 0;
 const file_helper_1 = require("./file-helper");
 /*
 Get the deployment data for a contract, including the address and abi
@@ -31,4 +31,8 @@ function getTokenFromConfig({ tokenName, networkName }) {
     return tokenData;
 }
 exports.getTokenFromConfig = getTokenFromConfig;
+function getProtocolFeeConfig() {
+    return (0, file_helper_1.readJSONFile)('config/protocol-fee-config.json');
+}
+exports.getProtocolFeeConfig = getProtocolFeeConfig;
 //# sourceMappingURL=contracts-helper.js.map
