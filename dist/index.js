@@ -9,14 +9,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.getTotalAmountDueFromAmountsDueArray = exports.getTotalAmountDueFromPaymentElementsArray = exports.getPaymentElementsFromInvoice = exports.includesProtocolFee = exports.calculateSubtotalLessProtocolFee = exports.applyProtocolFeeToPaymentElements = exports.applyProtocolFee = exports.applyInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractDeployment = exports.ETH_ADDRESS = void 0;
+exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.getTotalAmountDueFromAmountsDueArray = exports.getTotalAmountDueFromPaymentElementsArray = exports.getPaymentElementsFromInvoice = exports.includesProtocolFee = exports.calculateSubtotalLessProtocolFee = exports.applyProtocolFeeToPaymentElements = exports.applyProtocolFee = exports.applyInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractABI = exports.getPayspecContractAddress = exports.ETH_ADDRESS = void 0;
 const ethers_1 = require("ethers");
 const contracts_helper_1 = require("./lib/contracts-helper");
+const contracts_helper_2 = require("./lib/contracts-helper");
+const PayspecContractABI = require("./config/abi/payspec.abi.json");
 exports.ETH_ADDRESS = "0x0000000000000000000000000000000000000010";
-function getPayspecContractDeployment(networkName) {
-    return (0, contracts_helper_1.getDeploymentConfig)(networkName);
+function getPayspecContractAddress(networkName) {
+    return (0, contracts_helper_2.getPayspecContractAddress)(networkName);
 }
-exports.getPayspecContractDeployment = getPayspecContractDeployment;
+exports.getPayspecContractAddress = getPayspecContractAddress;
+function getPayspecContractABI() {
+    return PayspecContractABI;
+}
+exports.getPayspecContractABI = getPayspecContractABI;
 function getPayspecRandomNonce(size) {
     if (!size)
         size = 16;
@@ -176,6 +182,8 @@ function parseStringifiedArray(str) {
 }
 exports.parseStringifiedArray = parseStringifiedArray;
 function getCurrencyTokenAddress({ tokenName, chainId }) {
+    if (isNaN(chainId))
+        throw new Error("chainId must be a number");
     let networkName = (0, contracts_helper_1.getNetworkNameFromChainId)(chainId);
     return (0, contracts_helper_1.getTokenFromConfig)({ tokenName, networkName }).address;
 }
@@ -228,8 +236,7 @@ function validateInvoice(invoiceData) {
 exports.validateInvoice = validateInvoice;
 function getPayspecContractAddressFromChainId(chainId) {
     const networkName = (0, contracts_helper_1.getNetworkNameFromChainId)(chainId);
-    const contractDeployment = getPayspecContractDeployment(networkName);
-    return contractDeployment.address;
+    return getPayspecContractAddress(networkName);
 }
 exports.getPayspecContractAddressFromChainId = getPayspecContractAddressFromChainId;
 //use gpt to write test for this 
@@ -301,9 +308,8 @@ exports.generatePayspecInvoiceSimple = generatePayspecInvoiceSimple;
 function userPayInvoice(from, invoiceData, provider, netName) {
     return __awaiter(this, void 0, void 0, function* () {
         let networkName = netName ? netName : 'mainnet';
-        let payspecContractData = getPayspecContractDeployment(networkName);
-        let payspecABI = payspecContractData.abi;
-        let payspecAddress = payspecContractData.address;
+        let payspecABI = getPayspecContractABI();
+        let payspecAddress = getPayspecContractAddress(networkName);
         let payspecContractInstance = new ethers_1.Contract(invoiceData.payspecContractAddress, payspecABI);
         if (invoiceData.payspecContractAddress != payspecAddress) {
             console.error('Contract address mismatch', payspecAddress, invoiceData);

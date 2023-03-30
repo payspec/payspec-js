@@ -20,10 +20,8 @@ export interface PayspecPaymentElement {
     amountDue: string;
 }
 export declare const ETH_ADDRESS = "0x0000000000000000000000000000000000000010";
-export declare function getPayspecContractDeployment(networkName: string): {
-    address: string;
-    abi: any;
-};
+export declare function getPayspecContractAddress(networkName: string): string;
+export declare function getPayspecContractABI(): any;
 export declare function getPayspecRandomNonce(size?: number): string;
 export declare function getPayspecInvoiceUUID(invoiceData: PayspecInvoice): string | undefined;
 export declare function applyInvoiceUUID(invoice: PayspecInvoice): PayspecInvoice;

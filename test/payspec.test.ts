@@ -6,7 +6,7 @@ import {
     applyProtocolFee,
     calculateSubtotalLessProtocolFee,
     generatePayspecInvoiceSimple,
-    getPayspecContractDeployment, 
+
     getPayspecRandomNonce, 
     includesProtocolFee, 
     PayspecInvoice,
@@ -17,16 +17,7 @@ import {
 
 describe('Payspec Js', () => {
  
-    
-    it('should get deployment config', () => {
-
- 
-        let deployment = getPayspecContractDeployment('rinkeby')
-
-        expect(deployment.address).to.be.a('string')
-
-
-    })
+     
     
 
     it('should validate an invoice ', () => {

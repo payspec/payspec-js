@@ -1,15 +1,17 @@
  
  
- import { readJSONFile } from "./file-helper"
+ //import { readJSONFile } from "./file-helper"
  
  
  const protocolFeeConfig = require("../config/protocol-fee-config.json")
  const tokensConfig = require(`../config/tokens.json`)
 
+ const payspecDeploymentsConfig = require(`../config/payspec-deployments.json`)
+
   /*
   Get the deployment data for a contract, including the address and abi 
   */
-  export function getDeploymentConfig(networkName: string, contractName?: string) : {address:string,abi:any} {
+ /* export function getDeploymentConfig(networkName: string, contractName?: string) : {address:string,abi:any} {
 
     if(!contractName) contractName = 'Payspec'
 
@@ -18,11 +20,19 @@
     if(!f.address || !f.abi) throw new Error('Could not load deployment file from Payspec')
     
     return f 
+  }*/
+
+
+  export function getPayspecContractAddress(networkName: string) : string {
+
+    return payspecDeploymentsConfig[networkName].payspec.address
   }
 
 
   export function getNetworkNameFromChainId(chainId:number) : string {
 
+    if(isNaN(chainId)) throw new Error("chainId must be a number")
+    
     switch(chainId){
       case 1: return 'mainnet'
       case 4: return 'rinkeby'

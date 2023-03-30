@@ -6,8 +6,11 @@ export type APICall = (req: any, res: any) => any
 import { Web3Provider } from "@ethersproject/providers";
 import { BigNumber , Contract, ethers, utils } from "ethers";
  
-import  {getDeploymentConfig, getNetworkNameFromChainId,getProtocolFeeConfig,getTokenFromConfig} from "./lib/contracts-helper";
+import  { getNetworkNameFromChainId,getProtocolFeeConfig,getTokenFromConfig} from "./lib/contracts-helper";
 
+import { getPayspecContractAddress as getPayspecContractAddressFromHelper } from "./lib/contracts-helper";
+
+const PayspecContractABI = require("./config/abi/payspec.abi.json")
  
 export interface ProtocolFeeConfig{
   protocolFeePercentBasisPoints:number,
@@ -38,10 +41,17 @@ export interface PayspecPaymentElement {
 export const ETH_ADDRESS = "0x0000000000000000000000000000000000000010" 
 
 
-export function getPayspecContractDeployment( networkName: string ): {address:string, abi:any }{
+export function getPayspecContractAddress( networkName: string ):  string {
  
 
-  return getDeploymentConfig(networkName)
+  return getPayspecContractAddressFromHelper(networkName)
+
+}
+
+export function getPayspecContractABI( ):  any {
+ 
+
+  return PayspecContractABI
 
 }
 
@@ -306,6 +316,8 @@ export function getCurrencyTokenAddress({
   tokenName,chainId
 }:{tokenName:string, 
   chainId:number}) : string {
+
+    if(isNaN(chainId)) throw new Error("chainId must be a number")
     
     let networkName = getNetworkNameFromChainId(chainId)
 
@@ -369,9 +381,7 @@ export function getPayspecContractAddressFromChainId(chainId: number): string {
 
   const networkName = getNetworkNameFromChainId(chainId)
   
-  const contractDeployment = getPayspecContractDeployment(networkName)
-
-  return contractDeployment.address
+  return getPayspecContractAddress(networkName)
 
 }
 
@@ -479,9 +489,9 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
 
   let networkName = netName? netName : 'mainnet'
 
-  let payspecContractData = getPayspecContractDeployment(networkName)
-  let payspecABI = payspecContractData.abi 
-  let payspecAddress = payspecContractData.address 
+  
+  let payspecABI = getPayspecContractABI()
+  let payspecAddress = getPayspecContractAddress(networkName)
 
   
 

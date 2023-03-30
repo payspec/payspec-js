@@ -1,7 +1,4 @@
-export declare function getDeploymentConfig(networkName: string, contractName?: string): {
-    address: string;
-    abi: any;
-};
+export declare function getPayspecContractAddress(networkName: string): string;
 export declare function getNetworkNameFromChainId(chainId: number): string;
 export declare function getTokenFromConfig({ tokenName, networkName }: {
     tokenName: string;
