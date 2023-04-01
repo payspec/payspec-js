@@ -23,7 +23,7 @@ export interface PayspecInvoice {
   description : string,
   nonce: string, //BigNumber,
   token: string,
-  totalAmountDue: string, //BigNumber, 
+  chainId: string, //BigNumber, 
   payToArrayStringified: string, //Array<string>, // use JSON.stringify and JSON.parse
   amountsDueArrayStringified: string, //Array<number>, // use JSON.stringify and JSON.parse
   expiresAt: number,
@@ -71,7 +71,7 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
   var description = {t: 'string', v: invoiceData.description};
   var nonce = {t: 'uint256', v: BigNumber.from(invoiceData.nonce).toString() } ;
   var token = {t:'address', v: invoiceData.token};
-  var totalAmountDue = {t: 'uint256', v: BigNumber.from(invoiceData.totalAmountDue).toString() };
+  var chainId = {t: 'uint256', v: BigNumber.from(invoiceData.chainId).toString() };
   
   let payToArray = JSON.parse(invoiceData.payToArrayStringified)
   let amountsDueArray = JSON.parse(invoiceData.amountsDueArrayStringified)
@@ -93,7 +93,7 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
     description, 
     nonce,
     token,
-    totalAmountDue,
+    chainId,
     payTo,
     amountsDue, 
     expiresAt 
@@ -101,7 +101,7 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
 
     const result = ethers.utils.solidityKeccak256(
       ['address', 'string', 'uint256', 'address', 'uint256', 'address[]', 'uint256[]', 'uint256'],
-      [payspecContractAddress.v, description.v, nonce.v, token.v, totalAmountDue.v, payTo.v, amountsDue.v, expiresAt.v]
+      [payspecContractAddress.v, description.v, nonce.v, token.v, chainId.v, payTo.v, amountsDue.v, expiresAt.v]
     );
 
     return result ? result: undefined
@@ -134,7 +134,7 @@ export function applyProtocolFee(invoice: PayspecInvoice) : PayspecInvoice {
     amountsDueArrayStringified 
   } = getPayspecPaymentDataFromPaymentsArray(updatedPaymentElements)
 
-  if(totalAmountDue != originalTotalAmountDue) throw new Error('Unable to apply protocol fee: total amount update mismatch.  This is a bug in the payspec javascript lib.')
+ // if(totalAmountDue != originalTotalAmountDue) throw new Error('Unable to apply protocol fee: total amount update mismatch.  This is a bug in the payspec javascript lib.')
 
 
   let invoiceClone = Object.assign({},invoice)
@@ -142,7 +142,7 @@ export function applyProtocolFee(invoice: PayspecInvoice) : PayspecInvoice {
   let updatedInvoice : PayspecInvoice = Object.assign( 
      invoiceClone, 
       {
-      totalAmountDue,
+      
       payToArrayStringified,
       amountsDueArrayStringified 
     } 
@@ -238,7 +238,7 @@ export function includesProtocolFee(invoice:PayspecInvoice) : boolean {
   let protocolFeePercentBasisPoints = protocolFeeConfig.protocolFeePercentBasisPoints
  // let protocolFeeAmount = BigNumber.from(originalTotalAmountDue).sub(BigNumber.from(totalAmountDueLessFees)).toString()
   
-  let totalAmountDueLessFees = BigNumber.from(invoice.totalAmountDue).mul(10000).mul(10000 - protocolFeePercentBasisPoints).div(10000).div(10000)
+  let totalAmountDueLessFees = BigNumber.from(originalTotalAmountDue /*invoice.totalAmountDue*/).mul(10000).mul(10000 - protocolFeePercentBasisPoints).div(10000).div(10000)
 
   let protocolFeeAmount = BigNumber.from(originalTotalAmountDue).sub(totalAmountDueLessFees)
 
@@ -333,7 +333,7 @@ export function validateInvoice(invoiceData: PayspecInvoice): boolean {
     'description',
     'nonce',
     'token',
-    'totalAmountDue',
+    'chainId',
     'payToArrayStringified',
     'amountsDueArrayStringified',
     'expiresAt'
@@ -365,14 +365,14 @@ export function validateInvoice(invoiceData: PayspecInvoice): boolean {
   })
 
   //total amount due must be equal to sum of amounts due array
-  let totalAmountDue = BigNumber.from(invoiceData.totalAmountDue)
+ /* let totalAmountDue = BigNumber.from(invoiceData.totalAmountDue)
   let sumAmountsDue = BigNumber.from(0)
   amountsDueArray.forEach( (amountDue) => {
     sumAmountsDue = sumAmountsDue.add( BigNumber.from(amountDue) )
   })
 
   if(!totalAmountDue.eq(sumAmountsDue)) throw new Error('totalAmountDue must be equal to sum of amountsDueArray')
-
+*/
   return true;
  
 }
@@ -470,7 +470,7 @@ export function generatePayspecInvoiceSimple(
       description, //can use product id here
       nonce,
       token: tokenAddress,
-      totalAmountDue,
+      chainId: chainId.toString(),
       payToArrayStringified,
       amountsDueArrayStringified,
       expiresAt
@@ -505,12 +505,12 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
   let description = invoiceData.description
   let nonce = BigNumber.from( invoiceData.nonce).toString()
   let token = invoiceData.token
-  let totalAmountDue = BigNumber.from(invoiceData.totalAmountDue).toString()
+  let chainId = BigNumber.from(invoiceData.chainId).toString()
   let payToArray = parseStringifiedArray(invoiceData.payToArrayStringified)
   let amountsDueArray = parseStringifiedArray(invoiceData.amountsDueArrayStringified)
   let ethBlockExpiresAt = invoiceData.expiresAt
   
-    
+  let totalAmountDue = getTotalAmountDueFromAmountsDueArray(amountsDueArray)
  
   let expectedUUID = invoiceData.invoiceUUID
   
@@ -529,7 +529,7 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
     description,
     nonce,
     token,
-    totalAmountDue, //wei
+    chainId, 
     payToArray,
     amountsDueArray,
     ethBlockExpiresAt
@@ -539,9 +539,9 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
 
   if(contractInvoiceUUID != invoiceData.invoiceUUID){
     console.error('contract MISMATCH UUID ', contractInvoiceUUID, invoiceData )
-  }else{
-    console.log('uuid match2 ')
-  }
+
+    throw new Error("Mismatching UUID calculated")
+  } 
 
  
   try{
@@ -549,7 +549,7 @@ export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, 
       description,
       nonce,
       token,
-      totalAmountDue, //wei
+      chainId, //wei
       payToArray,
       amountsDueArray,
       ethBlockExpiresAt,
