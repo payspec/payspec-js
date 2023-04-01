@@ -30,7 +30,7 @@ function getPayspecRandomNonce(size) {
 }
 exports.getPayspecRandomNonce = getPayspecRandomNonce;
 function getPayspecInvoiceUUID(invoiceData) {
-    console.log('invoiceData', invoiceData);
+    const expiration = Math.floor(parseInt(invoiceData.expiresAt.toString()));
     var payspecContractAddress = { t: 'address', v: invoiceData.payspecContractAddress };
     var description = { t: 'string', v: invoiceData.description };
     var nonce = { t: 'uint256', v: ethers_1.BigNumber.from(invoiceData.nonce).toString() };
@@ -40,7 +40,7 @@ function getPayspecInvoiceUUID(invoiceData) {
     let amountsDueArray = JSON.parse(invoiceData.amountsDueArrayStringified);
     var payTo = { t: 'address[]', v: payToArray };
     var amountsDue = { t: 'uint[]', v: amountsDueArray };
-    var expiresAt = { t: 'uint', v: invoiceData.expiresAt };
+    var expiresAt = { t: 'uint', v: expiration };
     /*
     test!!
   
