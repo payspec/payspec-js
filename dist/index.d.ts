@@ -9,7 +9,7 @@ export interface PayspecInvoice {
     description: string;
     nonce: string;
     token: string;
-    totalAmountDue: string;
+    chainId: string;
     payToArrayStringified: string;
     amountsDueArrayStringified: string;
     expiresAt: number;

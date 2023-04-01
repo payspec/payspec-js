@@ -35,7 +35,7 @@ function getPayspecInvoiceUUID(invoiceData) {
     var description = { t: 'string', v: invoiceData.description };
     var nonce = { t: 'uint256', v: ethers_1.BigNumber.from(invoiceData.nonce).toString() };
     var token = { t: 'address', v: invoiceData.token };
-    var totalAmountDue = { t: 'uint256', v: ethers_1.BigNumber.from(invoiceData.totalAmountDue).toString() };
+    var chainId = { t: 'uint256', v: ethers_1.BigNumber.from(invoiceData.chainId).toString() };
     let payToArray = JSON.parse(invoiceData.payToArrayStringified);
     let amountsDueArray = JSON.parse(invoiceData.amountsDueArrayStringified);
     var payTo = { t: 'address[]', v: payToArray };
@@ -52,12 +52,12 @@ function getPayspecInvoiceUUID(invoiceData) {
        description,
        nonce,
        token,
-       totalAmountDue,
+       chainId,
        payTo,
        amountsDue,
        expiresAt
        );*/
-    const result = ethers_1.ethers.utils.solidityKeccak256(['address', 'string', 'uint256', 'address', 'uint256', 'address[]', 'uint256[]', 'uint256'], [payspecContractAddress.v, description.v, nonce.v, token.v, totalAmountDue.v, payTo.v, amountsDue.v, expiresAt.v]);
+    const result = ethers_1.ethers.utils.solidityKeccak256(['address', 'string', 'uint256', 'address', 'uint256', 'address[]', 'uint256[]', 'uint256'], [payspecContractAddress.v, description.v, nonce.v, token.v, chainId.v, payTo.v, amountsDue.v, expiresAt.v]);
     return result ? result : undefined;
 }
 exports.getPayspecInvoiceUUID = getPayspecInvoiceUUID;
@@ -73,11 +73,9 @@ function applyProtocolFee(invoice) {
     // add the protocol fee to the payment elements 
     let updatedPaymentElements = applyProtocolFeeToPaymentElements(paymentElements);
     let { totalAmountDue, payToArrayStringified, amountsDueArrayStringified } = getPayspecPaymentDataFromPaymentsArray(updatedPaymentElements);
-    if (totalAmountDue != originalTotalAmountDue)
-        throw new Error('Unable to apply protocol fee: total amount update mismatch.  This is a bug in the payspec javascript lib.');
+    // if(totalAmountDue != originalTotalAmountDue) throw new Error('Unable to apply protocol fee: total amount update mismatch.  This is a bug in the payspec javascript lib.')
     let invoiceClone = Object.assign({}, invoice);
     let updatedInvoice = Object.assign(invoiceClone, {
-        totalAmountDue,
         payToArrayStringified,
         amountsDueArrayStringified
     });
@@ -134,7 +132,7 @@ function includesProtocolFee(invoice) {
     //let totalAmountDueLessFees = calculateSubtotalLessProtocolFee(paymentElements)
     let protocolFeePercentBasisPoints = protocolFeeConfig.protocolFeePercentBasisPoints;
     // let protocolFeeAmount = BigNumber.from(originalTotalAmountDue).sub(BigNumber.from(totalAmountDueLessFees)).toString()
-    let totalAmountDueLessFees = ethers_1.BigNumber.from(invoice.totalAmountDue).mul(10000).mul(10000 - protocolFeePercentBasisPoints).div(10000).div(10000);
+    let totalAmountDueLessFees = ethers_1.BigNumber.from(originalTotalAmountDue /*invoice.totalAmountDue*/).mul(10000).mul(10000 - protocolFeePercentBasisPoints).div(10000).div(10000);
     let protocolFeeAmount = ethers_1.BigNumber.from(originalTotalAmountDue).sub(totalAmountDueLessFees);
     console.log('payment elements', JSON.stringify(paymentElements));
     console.log('includes protocol fee... ', originalTotalAmountDue.toString(), totalAmountDueLessFees.toString(), protocolFeeAmount.toString());
@@ -194,7 +192,7 @@ function validateInvoice(invoiceData) {
         'description',
         'nonce',
         'token',
-        'totalAmountDue',
+        'chainId',
         'payToArrayStringified',
         'amountsDueArrayStringified',
         'expiresAt'
@@ -224,13 +222,14 @@ function validateInvoice(invoiceData) {
             throw new Error('payToAddress must be an address');
     });
     //total amount due must be equal to sum of amounts due array
-    let totalAmountDue = ethers_1.BigNumber.from(invoiceData.totalAmountDue);
-    let sumAmountsDue = ethers_1.BigNumber.from(0);
-    amountsDueArray.forEach((amountDue) => {
-        sumAmountsDue = sumAmountsDue.add(ethers_1.BigNumber.from(amountDue));
-    });
-    if (!totalAmountDue.eq(sumAmountsDue))
-        throw new Error('totalAmountDue must be equal to sum of amountsDueArray');
+    /* let totalAmountDue = BigNumber.from(invoiceData.totalAmountDue)
+     let sumAmountsDue = BigNumber.from(0)
+     amountsDueArray.forEach( (amountDue) => {
+       sumAmountsDue = sumAmountsDue.add( BigNumber.from(amountDue) )
+     })
+   
+     if(!totalAmountDue.eq(sumAmountsDue)) throw new Error('totalAmountDue must be equal to sum of amountsDueArray')
+   */
     return true;
 }
 exports.validateInvoice = validateInvoice;
@@ -295,7 +294,7 @@ function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paym
         description,
         nonce,
         token: tokenAddress,
-        totalAmountDue,
+        chainId: chainId.toString(),
         payToArrayStringified,
         amountsDueArrayStringified,
         expiresAt
@@ -317,26 +316,24 @@ function userPayInvoice(from, invoiceData, provider, netName) {
         let description = invoiceData.description;
         let nonce = ethers_1.BigNumber.from(invoiceData.nonce).toString();
         let token = invoiceData.token;
-        let totalAmountDue = ethers_1.BigNumber.from(invoiceData.totalAmountDue).toString();
+        let chainId = ethers_1.BigNumber.from(invoiceData.chainId).toString();
         let payToArray = parseStringifiedArray(invoiceData.payToArrayStringified);
         let amountsDueArray = parseStringifiedArray(invoiceData.amountsDueArrayStringified);
         let ethBlockExpiresAt = invoiceData.expiresAt;
+        let totalAmountDue = getTotalAmountDueFromAmountsDueArray(amountsDueArray);
         let expectedUUID = invoiceData.invoiceUUID;
         let signer = provider.getSigner();
         let usesEther = (token == exports.ETH_ADDRESS);
         let totalAmountDueEth = usesEther ? totalAmountDue : '0';
         //calculate value eth -- depends on tokenAddre in invoice data 
         let valueEth = ethers_1.utils.parseUnits(totalAmountDueEth, 'wei').toHexString();
-        let contractInvoiceUUID = yield payspecContractInstance.connect(signer).getInvoiceUUID(description, nonce, token, totalAmountDue, //wei
-        payToArray, amountsDueArray, ethBlockExpiresAt);
+        let contractInvoiceUUID = yield payspecContractInstance.connect(signer).getInvoiceUUID(description, nonce, token, chainId, payToArray, amountsDueArray, ethBlockExpiresAt);
         if (contractInvoiceUUID != invoiceData.invoiceUUID) {
             console.error('contract MISMATCH UUID ', contractInvoiceUUID, invoiceData);
-        }
-        else {
-            console.log('uuid match2 ');
+            throw new Error("Mismatching UUID calculated");
         }
         try {
-            let tx = yield payspecContractInstance.connect(signer).createAndPayInvoice(description, nonce, token, totalAmountDue, //wei
+            let tx = yield payspecContractInstance.connect(signer).createAndPayInvoice(description, nonce, token, chainId, //wei
             payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID, { from, value: valueEth });
             return { success: true, data: tx };
         }
