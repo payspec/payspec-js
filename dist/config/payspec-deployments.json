@@ -1,12 +1,9 @@
 {
 
-    "rinkeby":{
-        "payspec":{"address":"0x548cf929a38f760ef70f2daea2a6142d96fe56df" }
-    },
+    
     "goerli":{
-        "payspec":{"address":"0x0000000000000000000000000000000000000010" }
+        "payspec":{"address":"0x242FC748D08ec2524f15de3f1BCe3A97eFD1133e" }
     },
-
     "mainnet":{
         "payspec":{"address":"0x0000000000000000000000000000000000000010" }
     }

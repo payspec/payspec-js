@@ -1,13 +1,12 @@
 {
   "name": "payspec-js",
-  "version": "0.27.1",
+  "version": "0.27.2",
   "description": "Deterministic invoicing and payments for Web3",
   "main": "dist/index.js",
   "types": "dist/index.d.ts", 
   "files": [
     "dist"
   ],
-
   "scripts": {
     "test": "NODE_ENV=test TS_NODE_PROJECT=\"tsconfig.testing.json\" mocha --require ts-node/register 'test/**/*.ts' --timeout 25000",
     "build": "tsc --declaration && cp -r ./config/ ./dist/"
