@@ -12,6 +12,9 @@ import { getPayspecContractAddress as getPayspecContractAddressFromHelper } from
 
 const PayspecContractABI = require("./config/abi/payspec.abi.json")
  
+const tokenConfig = require(`./config/tokens.json`)
+
+
 export interface ProtocolFeeConfig{
   protocolFeePercentBasisPoints:number,
   protocolFeeRecipientAddress:string
@@ -40,6 +43,42 @@ export interface PayspecPaymentElement {
 
 export const ETH_ADDRESS = "0x0000000000000000000000000000000000000010" 
 
+
+
+export function buildTokenDictionary() : any{
+
+
+  let tokenDictionary:any = {}
+
+  
+  for(let networkName in tokenConfig){
+ 
+    for(let tokenName in tokenConfig[networkName]){
+
+      let tokenData = tokenConfig[networkName][tokenName]
+
+      let tokenAddress = tokenData.address
+
+      tokenDictionary[tokenAddress] = {
+        tokenAddress: tokenAddress,
+        tokenName: tokenName,
+        symbol: tokenData.symbol,       
+        decimals: tokenData.decimals
+      }
+
+    }
+
+  }
+
+  return tokenDictionary
+
+}
+
+export function getTokenDataFromTokenDictionary(tokenDictionary:any, tokenAddress:string, chainId?:number) : any{
+
+  return tokenDictionary[tokenAddress]
+
+}
 
 export function getPayspecContractAddress( networkName: string ):  string {
  

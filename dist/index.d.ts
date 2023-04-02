@@ -20,6 +20,8 @@ export interface PayspecPaymentElement {
     amountDue: string;
 }
 export declare const ETH_ADDRESS = "0x0000000000000000000000000000000000000010";
+export declare function buildTokenDictionary(): any;
+export declare function getTokenDataFromTokenDictionary(tokenDictionary: any, tokenAddress: string, chainId?: number): any;
 export declare function getPayspecContractAddress(networkName: string): string;
 export declare function getPayspecContractABI(): any;
 export declare function getPayspecRandomNonce(size?: number): string;

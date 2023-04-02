@@ -9,12 +9,34 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.getTotalAmountDueFromAmountsDueArray = exports.getTotalAmountDueFromPaymentElementsArray = exports.getPaymentElementsFromInvoice = exports.includesProtocolFee = exports.calculateSubtotalLessProtocolFee = exports.applyProtocolFeeToPaymentElements = exports.applyProtocolFee = exports.applyInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractABI = exports.getPayspecContractAddress = exports.ETH_ADDRESS = void 0;
+exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.getTotalAmountDueFromAmountsDueArray = exports.getTotalAmountDueFromPaymentElementsArray = exports.getPaymentElementsFromInvoice = exports.includesProtocolFee = exports.calculateSubtotalLessProtocolFee = exports.applyProtocolFeeToPaymentElements = exports.applyProtocolFee = exports.applyInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractABI = exports.getPayspecContractAddress = exports.getTokenDataFromTokenDictionary = exports.buildTokenDictionary = exports.ETH_ADDRESS = void 0;
 const ethers_1 = require("ethers");
 const contracts_helper_1 = require("./lib/contracts-helper");
 const contracts_helper_2 = require("./lib/contracts-helper");
 const PayspecContractABI = require("./config/abi/payspec.abi.json");
+const tokenConfig = require(`./config/tokens.json`);
 exports.ETH_ADDRESS = "0x0000000000000000000000000000000000000010";
+function buildTokenDictionary() {
+    let tokenDictionary = {};
+    for (let networkName in tokenConfig) {
+        for (let tokenName in tokenConfig[networkName]) {
+            let tokenData = tokenConfig[networkName][tokenName];
+            let tokenAddress = tokenData.address;
+            tokenDictionary[tokenAddress] = {
+                tokenAddress: tokenAddress,
+                tokenName: tokenName,
+                symbol: tokenData.symbol,
+                decimals: tokenData.decimals
+            };
+        }
+    }
+    return tokenDictionary;
+}
+exports.buildTokenDictionary = buildTokenDictionary;
+function getTokenDataFromTokenDictionary(tokenDictionary, tokenAddress, chainId) {
+    return tokenDictionary[tokenAddress];
+}
+exports.getTokenDataFromTokenDictionary = getTokenDataFromTokenDictionary;
 function getPayspecContractAddress(networkName) {
     return (0, contracts_helper_2.getPayspecContractAddress)(networkName);
 }
