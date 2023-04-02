@@ -479,13 +479,15 @@ export function generatePayspecInvoiceSimple(
     chainId,
     description,
     tokenAddress,
-    paymentsArray
+    paymentsArray,
+    durationSeconds
   }:{
 
     chainId: number,
     description: string,
     tokenAddress: string,
-    paymentsArray: PayspecPaymentElement[]
+    paymentsArray: PayspecPaymentElement[],
+    durationSeconds?:number
 
   }
 
@@ -496,7 +498,9 @@ export function generatePayspecInvoiceSimple(
 
   const nonce = getPayspecRandomNonce()
 
-  const expiresAt = getPayspecExpiresInDelta( 50000 , 'seconds' )
+  const ONE_WEEK_SECONDS = 60*60*24*7
+
+  const expiresAt = getPayspecExpiresInDelta( durationSeconds ? durationSeconds : ONE_WEEK_SECONDS , 'seconds' )
 
 
   const {
