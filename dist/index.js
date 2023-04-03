@@ -16,6 +16,9 @@ const contracts_helper_2 = require("./lib/contracts-helper");
 const PayspecContractABI = require("./config/abi/payspec.abi.json");
 const tokenConfig = require(`./config/tokens.json`);
 exports.ETH_ADDRESS = "0x0000000000000000000000000000000000000010";
+/*
+  consider: dictionary should be by network ?
+*/
 function buildTokenDictionary() {
     let tokenDictionary = {};
     for (let networkName in tokenConfig) {
@@ -306,10 +309,11 @@ function getPayspecExpiresInDelta(delta, timeUnits) {
     return currentTimeSeconds + deltaSeconds;
 }
 exports.getPayspecExpiresInDelta = getPayspecExpiresInDelta;
-function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paymentsArray }) {
+function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paymentsArray, durationSeconds }) {
     const payspecContractAddress = getPayspecContractAddressFromChainId(chainId);
     const nonce = getPayspecRandomNonce();
-    const expiresAt = getPayspecExpiresInDelta(50000, 'seconds');
+    const ONE_WEEK_SECONDS = 60 * 60 * 24 * 7;
+    const expiresAt = getPayspecExpiresInDelta(durationSeconds ? durationSeconds : ONE_WEEK_SECONDS, 'seconds');
     const { totalAmountDue, payToArrayStringified, amountsDueArrayStringified } = getPayspecPaymentDataFromPaymentsArray(paymentsArray);
     const invoice = {
         payspecContractAddress: payspecContractAddress,

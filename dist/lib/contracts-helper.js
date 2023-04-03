@@ -29,6 +29,7 @@ function getNetworkNameFromChainId(chainId) {
         case 1: return 'mainnet';
         case 4: return 'rinkeby';
         case 5: return 'goerli';
+        case 10: return 'optimism';
         default: return 'unknown';
     }
 }

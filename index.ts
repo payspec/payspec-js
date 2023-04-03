@@ -44,6 +44,9 @@ export interface PayspecPaymentElement {
 export const ETH_ADDRESS = "0x0000000000000000000000000000000000000010" 
 
 
+/*
+  consider: dictionary should be by network ? 
+*/
 
 export function buildTokenDictionary() : any{
 

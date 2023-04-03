@@ -47,11 +47,12 @@ export declare function getPayspecPaymentDataFromPaymentsArray(elements: Payspec
     amountsDueArrayStringified: string;
 };
 export declare function getPayspecExpiresInDelta(delta: number, timeUnits?: string): number;
-export declare function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paymentsArray }: {
+export declare function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paymentsArray, durationSeconds }: {
     chainId: number;
     description: string;
     tokenAddress: string;
     paymentsArray: PayspecPaymentElement[];
+    durationSeconds?: number;
 }): PayspecInvoice;
 export declare function userPayInvoice(from: string, invoiceData: PayspecInvoice, provider: Web3Provider, netName?: string): Promise<{
     success: boolean;

@@ -6,6 +6,9 @@
     },
     "mainnet":{
         "payspec":{"address":"0x0000000000000000000000000000000000000010" }
+    },
+    "optimism":{
+        "payspec":{"address":"0x5e789dC982EeD11d15657cB942246547E20acA2f"}
     }
 
 
