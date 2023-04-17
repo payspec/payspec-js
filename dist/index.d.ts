@@ -1,5 +1,7 @@
 export type APICall = (req: any, res: any) => any;
 import { Web3Provider } from "@ethersproject/providers";
+import { getNetworkNameFromChainId } from "./lib/contracts-helper";
+export { getNetworkNameFromChainId };
 export interface ProtocolFeeConfig {
     protocolFeePercentBasisPoints: number;
     protocolFeeRecipientAddress: string;
