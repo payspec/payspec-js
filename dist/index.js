@@ -9,10 +9,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getSmartInvoiceURL = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.getTotalAmountDueFromAmountsDueArray = exports.getTotalAmountDueFromPaymentElementsArray = exports.getPaymentElementsFromInvoice = exports.includesProtocolFee = exports.calculateSubtotalLessProtocolFee = exports.applyProtocolFeeToPaymentElements = exports.applyProtocolFee = exports.applyInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractABI = exports.getPayspecContractAddress = exports.getTokenDataFromTokenDictionary = exports.buildTokenDictionary = exports.ETH_ADDRESS = exports.getNetworkNameFromChainId = void 0;
+exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getSmartInvoiceURL = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.getTotalAmountDueFromAmountsDueArray = exports.getTotalAmountDueFromPaymentElementsArray = exports.getPaymentElementsFromInvoice = exports.includesProtocolFee = exports.calculateSubtotalLessProtocolFee = exports.applyProtocolFeeToPaymentElements = exports.applyProtocolFee = exports.applyInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractABI = exports.getPayspecContractAddress = exports.getTokenDataFromTokenDictionary = exports.buildTokenDictionary = exports.ETH_ADDRESS = void 0;
 const ethers_1 = require("ethers");
 const contracts_helper_1 = require("./lib/contracts-helper");
-Object.defineProperty(exports, "getNetworkNameFromChainId", { enumerable: true, get: function () { return contracts_helper_1.getNetworkNameFromChainId; } });
 const contracts_helper_2 = require("./lib/contracts-helper");
 const PayspecContractABI = require("./config/abi/payspec.abi.json");
 const tokenConfig = require(`./config/tokens.json`);
@@ -344,15 +343,12 @@ function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paym
 }
 exports.generatePayspecInvoiceSimple = generatePayspecInvoiceSimple;
 //---------
-function userPayInvoice({ from, invoiceData, provider, netName }) {
+function userPayInvoice({ from, invoiceData, provider }) {
     return __awaiter(this, void 0, void 0, function* () {
-        let networkName = netName ? netName : 'mainnet';
+        //let netName = getNetworkNameFromChainId(chainId)
+        //let networkName = netName? netName : 'mainnet'
         let payspecABI = getPayspecContractABI();
-        let payspecAddress = getPayspecContractAddress(networkName);
         let payspecContractInstance = new ethers_1.Contract(invoiceData.payspecContractAddress, payspecABI);
-        if (invoiceData.payspecContractAddress != payspecAddress) {
-            console.error('Contract address mismatch', payspecAddress, invoiceData);
-        }
         let description = invoiceData.description;
         let nonce = ethers_1.BigNumber.from(invoiceData.nonce).toString();
         let token = invoiceData.token;
@@ -362,6 +358,11 @@ function userPayInvoice({ from, invoiceData, provider, netName }) {
         let ethBlockExpiresAt = invoiceData.expiresAt;
         let totalAmountDue = getTotalAmountDueFromAmountsDueArray(amountsDueArray);
         let expectedUUID = invoiceData.invoiceUUID;
+        let netName = (0, contracts_helper_1.getNetworkNameFromChainId)(parseInt(invoiceData.chainId));
+        let expectedPayspecAddress = getPayspecContractAddress(netName);
+        if (invoiceData.payspecContractAddress != expectedPayspecAddress) {
+            console.error('Contract address mismatch', expectedPayspecAddress, invoiceData);
+        }
         let signer = provider.getSigner();
         let usesEther = (token == exports.ETH_ADDRESS);
         let totalAmountDueEth = usesEther ? totalAmountDue : '0';

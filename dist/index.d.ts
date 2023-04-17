@@ -1,7 +1,5 @@
 export type APICall = (req: any, res: any) => any;
 import { Web3Provider } from "@ethersproject/providers";
-import { getNetworkNameFromChainId } from "./lib/contracts-helper";
-export { getNetworkNameFromChainId };
 export interface ProtocolFeeConfig {
     protocolFeePercentBasisPoints: number;
     protocolFeeRecipientAddress: string;
@@ -64,11 +62,10 @@ export declare function generatePayspecInvoiceSimple({ chainId, description, tok
     paymentsArray: PayspecPaymentElement[];
     durationSeconds?: number;
 }): PayspecInvoice;
-export declare function userPayInvoice({ from, invoiceData, provider, netName }: {
+export declare function userPayInvoice({ from, invoiceData, provider }: {
     from: string;
     invoiceData: PayspecInvoice;
     provider: Web3Provider;
-    netName?: string;
 }): Promise<{
     success: boolean;
     error?: any;

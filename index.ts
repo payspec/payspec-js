@@ -13,9 +13,7 @@ import { getPayspecContractAddress as getPayspecContractAddressFromHelper } from
 const PayspecContractABI = require("./config/abi/payspec.abi.json")
  
 const tokenConfig = require(`./config/tokens.json`)
-
-
-export {getNetworkNameFromChainId}
+ 
 
 
 export interface ProtocolFeeConfig{
@@ -568,22 +566,17 @@ export function generatePayspecInvoiceSimple(
 //---------
 
 
-export async function userPayInvoice( {from,invoiceData,provider,netName}:{from:string, invoiceData: PayspecInvoice, provider: Web3Provider, netName?: string} ) : Promise<{success:boolean, error?:any, data?: any}> {
+export async function userPayInvoice( {from,invoiceData,provider}:{from:string, invoiceData: PayspecInvoice, provider: Web3Provider } ) : Promise<{success:boolean, error?:any, data?: any}> {
 
-  let networkName = netName? netName : 'mainnet'
+  //let netName = getNetworkNameFromChainId(chainId)
+  //let networkName = netName? netName : 'mainnet'
 
   
   let payspecABI = getPayspecContractABI()
-  let payspecAddress = getPayspecContractAddress(networkName)
-
-  
-
 
   let payspecContractInstance = new Contract( invoiceData.payspecContractAddress, payspecABI)
 
-  if(invoiceData.payspecContractAddress != payspecAddress){
-    console.error('Contract address mismatch', payspecAddress, invoiceData)
-  }
+
 
   let description = invoiceData.description
   let nonce = BigNumber.from( invoiceData.nonce).toString()
@@ -597,6 +590,16 @@ export async function userPayInvoice( {from,invoiceData,provider,netName}:{from:
  
   let expectedUUID = invoiceData.invoiceUUID
   
+
+  let netName = getNetworkNameFromChainId(parseInt(invoiceData.chainId))
+  let expectedPayspecAddress = getPayspecContractAddress(netName)
+
+  if(invoiceData.payspecContractAddress != expectedPayspecAddress){
+    console.error('Contract address mismatch', expectedPayspecAddress, invoiceData)
+  }
+ 
+
+
 
   let signer = provider.getSigner()
 
