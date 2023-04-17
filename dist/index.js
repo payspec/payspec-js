@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.getTotalAmountDueFromAmountsDueArray = exports.getTotalAmountDueFromPaymentElementsArray = exports.getPaymentElementsFromInvoice = exports.includesProtocolFee = exports.calculateSubtotalLessProtocolFee = exports.applyProtocolFeeToPaymentElements = exports.applyProtocolFee = exports.applyInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractABI = exports.getPayspecContractAddress = exports.getTokenDataFromTokenDictionary = exports.buildTokenDictionary = exports.ETH_ADDRESS = void 0;
+exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getSmartInvoiceURL = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.getTotalAmountDueFromAmountsDueArray = exports.getTotalAmountDueFromPaymentElementsArray = exports.getPaymentElementsFromInvoice = exports.includesProtocolFee = exports.calculateSubtotalLessProtocolFee = exports.applyProtocolFeeToPaymentElements = exports.applyProtocolFee = exports.applyInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractABI = exports.getPayspecContractAddress = exports.getTokenDataFromTokenDictionary = exports.buildTokenDictionary = exports.ETH_ADDRESS = void 0;
 const ethers_1 = require("ethers");
 const contracts_helper_1 = require("./lib/contracts-helper");
 const contracts_helper_2 = require("./lib/contracts-helper");
@@ -309,6 +309,19 @@ function getPayspecExpiresInDelta(delta, timeUnits) {
     return currentTimeSeconds + deltaSeconds;
 }
 exports.getPayspecExpiresInDelta = getPayspecExpiresInDelta;
+function getSmartInvoiceURL({ baseUrl, tokenAddress, payTo, payAmount, chainId, description }) {
+    const params = new URLSearchParams({
+        payAmount,
+        tokenAddress,
+        payTo,
+        chainId: chainId.toString(),
+        description
+    });
+    const url = `${baseUrl}?${params.toString()}`;
+    console.log(url); // "https://example.com/path/to/resource?color=blue&number=1"
+    return url;
+}
+exports.getSmartInvoiceURL = getSmartInvoiceURL;
 function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paymentsArray, durationSeconds }) {
     const payspecContractAddress = getPayspecContractAddressFromChainId(chainId);
     const nonce = getPayspecRandomNonce();
@@ -330,7 +343,7 @@ function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paym
 }
 exports.generatePayspecInvoiceSimple = generatePayspecInvoiceSimple;
 //---------
-function userPayInvoice(from, invoiceData, provider, netName) {
+function userPayInvoice({ from, invoiceData, provider, netName }) {
     return __awaiter(this, void 0, void 0, function* () {
         let networkName = netName ? netName : 'mainnet';
         let payspecABI = getPayspecContractABI();

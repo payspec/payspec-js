@@ -565,7 +565,7 @@ export function generatePayspecInvoiceSimple(
 //---------
 
 
-export async function userPayInvoice( from:string, invoiceData: PayspecInvoice, provider: Web3Provider, netName?: string ) : Promise<{success:boolean, error?:any, data?: any}> {
+export async function userPayInvoice( {from,invoiceData,provider,netName}:{from:string, invoiceData: PayspecInvoice, provider: Web3Provider, netName?: string} ) : Promise<{success:boolean, error?:any, data?: any}> {
 
   let networkName = netName? netName : 'mainnet'
 

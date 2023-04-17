@@ -47,6 +47,14 @@ export declare function getPayspecPaymentDataFromPaymentsArray(elements: Payspec
     amountsDueArrayStringified: string;
 };
 export declare function getPayspecExpiresInDelta(delta: number, timeUnits?: string): number;
+export declare function getSmartInvoiceURL({ baseUrl, tokenAddress, payTo, payAmount, chainId, description }: {
+    baseUrl: string;
+    tokenAddress: string;
+    payTo: string;
+    payAmount: string;
+    chainId: number;
+    description: string;
+}): string;
 export declare function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paymentsArray, durationSeconds }: {
     chainId: number;
     description: string;
@@ -54,7 +62,12 @@ export declare function generatePayspecInvoiceSimple({ chainId, description, tok
     paymentsArray: PayspecPaymentElement[];
     durationSeconds?: number;
 }): PayspecInvoice;
-export declare function userPayInvoice(from: string, invoiceData: PayspecInvoice, provider: Web3Provider, netName?: string): Promise<{
+export declare function userPayInvoice({ from, invoiceData, provider, netName }: {
+    from: string;
+    invoiceData: PayspecInvoice;
+    provider: Web3Provider;
+    netName?: string;
+}): Promise<{
     success: boolean;
     error?: any;
     data?: any;
