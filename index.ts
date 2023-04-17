@@ -476,11 +476,30 @@ export function getPayspecExpiresInDelta(delta:number, timeUnits?:string) : numb
   return currentTimeSeconds + deltaSeconds
 }
 
-export function getSmartInvoiceURL(baseUrl:string, invoiceData: PayspecInvoice): string {
+export function getSmartInvoiceURL( {
+  baseUrl,
+  tokenAddress,
+  payTo,
+  payAmount,
+  chainId,
+  description
+}:
+  {
+  baseUrl:string 
+  tokenAddress:string
+  payTo:string
+  payAmount:string
+  chainId:number
+  description:string 
+}  ): string {
 
   const params = new URLSearchParams({
-    color: 'blue',
-    number: '1'
+    
+    payAmount,
+    tokenAddress,
+    payTo, 
+    chainId: chainId.toString(),
+    description
   });
   
   const url = `${baseUrl}?${params.toString()}`;
