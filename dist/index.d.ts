@@ -39,6 +39,8 @@ export declare function getCurrencyTokenAddress({ tokenName, chainId }: {
     tokenName: string;
     chainId: number;
 }): string;
+export declare function encodeInvoice(invoiceData: PayspecInvoice): string;
+export declare function decodeInvoice(invoiceData: string): PayspecInvoice;
 export declare function validateInvoice(invoiceData: PayspecInvoice): boolean;
 export declare function getPayspecContractAddressFromChainId(chainId: number): string;
 export declare function getPayspecPaymentDataFromPaymentsArray(elements: PayspecPaymentElement[]): {
@@ -47,6 +49,13 @@ export declare function getPayspecPaymentDataFromPaymentsArray(elements: Payspec
     amountsDueArrayStringified: string;
 };
 export declare function getPayspecExpiresInDelta(delta: number, timeUnits?: string): number;
+export declare function getSmartInvoiceURLWithPaymentsArray({ baseUrl, tokenAddress, paymentsArray, chainId, description }: {
+    baseUrl: string;
+    tokenAddress: string;
+    paymentsArray: PayspecPaymentElement[];
+    chainId: number;
+    description: string;
+}): string;
 export declare function getSmartInvoiceURL({ baseUrl, tokenAddress, payTo, payAmount, chainId, description }: {
     baseUrl: string;
     tokenAddress: string;

@@ -493,6 +493,43 @@ export function getPayspecExpiresInDelta(delta:number, timeUnits?:string) : numb
   return currentTimeSeconds + deltaSeconds
 }
 
+export function getSmartInvoiceURLWithPaymentsArray( {
+  baseUrl,
+  tokenAddress,
+  paymentsArray, 
+  chainId,
+  description
+}:
+  {
+  baseUrl:string 
+  tokenAddress:string
+  paymentsArray:PayspecPaymentElement[] 
+  chainId:number
+  description:string 
+}  ): string {
+
+
+  let payToArray = []
+  let payAmountArray = [] 
+
+  for(let payment of paymentsArray){
+    payToArray.push(payment.payTo)
+    payAmountArray.push(payment.amountDue)
+  }
+
+
+  return getSmartInvoiceURL({
+
+    baseUrl,
+    tokenAddress,
+    payTo: JSON.stringify(payToArray),
+    payAmount: JSON.stringify(payAmountArray),
+    chainId,
+    description
+
+  })
+}
+
 export function getSmartInvoiceURL( {
   baseUrl,
   tokenAddress,

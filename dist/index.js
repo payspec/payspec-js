@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getSmartInvoiceURL = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.getTotalAmountDueFromAmountsDueArray = exports.getTotalAmountDueFromPaymentElementsArray = exports.getPaymentElementsFromInvoice = exports.includesProtocolFee = exports.calculateSubtotalLessProtocolFee = exports.applyProtocolFeeToPaymentElements = exports.applyProtocolFee = exports.applyInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractABI = exports.getPayspecContractAddress = exports.getTokenDataFromTokenDictionary = exports.buildTokenDictionary = exports.ETH_ADDRESS = void 0;
+exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getSmartInvoiceURL = exports.getSmartInvoiceURLWithPaymentsArray = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.decodeInvoice = exports.encodeInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.getTotalAmountDueFromAmountsDueArray = exports.getTotalAmountDueFromPaymentElementsArray = exports.getPaymentElementsFromInvoice = exports.includesProtocolFee = exports.calculateSubtotalLessProtocolFee = exports.applyProtocolFeeToPaymentElements = exports.applyProtocolFee = exports.applyInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractABI = exports.getPayspecContractAddress = exports.getTokenDataFromTokenDictionary = exports.buildTokenDictionary = exports.ETH_ADDRESS = void 0;
 const ethers_1 = require("ethers");
 const contracts_helper_1 = require("./lib/contracts-helper");
 const contracts_helper_2 = require("./lib/contracts-helper");
@@ -211,6 +211,14 @@ function getCurrencyTokenAddress({ tokenName, chainId }) {
     return (0, contracts_helper_1.getTokenFromConfig)({ tokenName, networkName }).address;
 }
 exports.getCurrencyTokenAddress = getCurrencyTokenAddress;
+function encodeInvoice(invoiceData) {
+    return JSON.stringify(invoiceData);
+}
+exports.encodeInvoice = encodeInvoice;
+function decodeInvoice(invoiceData) {
+    return JSON.parse(invoiceData);
+}
+exports.decodeInvoice = decodeInvoice;
 function validateInvoice(invoiceData) {
     const requiredFields = [
         'payspecContractAddress',
@@ -309,6 +317,23 @@ function getPayspecExpiresInDelta(delta, timeUnits) {
     return currentTimeSeconds + deltaSeconds;
 }
 exports.getPayspecExpiresInDelta = getPayspecExpiresInDelta;
+function getSmartInvoiceURLWithPaymentsArray({ baseUrl, tokenAddress, paymentsArray, chainId, description }) {
+    let payToArray = [];
+    let payAmountArray = [];
+    for (let payment of paymentsArray) {
+        payToArray.push(payment.payTo);
+        payAmountArray.push(payment.amountDue);
+    }
+    return getSmartInvoiceURL({
+        baseUrl,
+        tokenAddress,
+        payTo: JSON.stringify(payToArray),
+        payAmount: JSON.stringify(payAmountArray),
+        chainId,
+        description
+    });
+}
+exports.getSmartInvoiceURLWithPaymentsArray = getSmartInvoiceURLWithPaymentsArray;
 function getSmartInvoiceURL({ baseUrl, tokenAddress, payTo, payAmount, chainId, description }) {
     const params = new URLSearchParams({
         payAmount,
