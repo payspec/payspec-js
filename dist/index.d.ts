@@ -49,20 +49,26 @@ export declare function getPayspecPaymentDataFromPaymentsArray(elements: Payspec
     amountsDueArrayStringified: string;
 };
 export declare function getPayspecExpiresInDelta(delta: number, timeUnits?: string): number;
-export declare function getSmartInvoiceURLWithPaymentsArray({ baseUrl, tokenAddress, paymentsArray, chainId, description }: {
+export declare function getSmartInvoiceURLWithPaymentsArray({ baseUrl, tokenAddress, paymentsArray, chainId, description, nonce, expiration, expectedUUID }: {
     baseUrl: string;
     tokenAddress: string;
     paymentsArray: PayspecPaymentElement[];
     chainId: number;
     description: string;
+    nonce: string;
+    expiration: string;
+    expectedUUID?: string;
 }): string;
-export declare function getSmartInvoiceURL({ baseUrl, tokenAddress, payTo, payAmount, chainId, description }: {
+export declare function getSmartInvoiceURL({ baseUrl, tokenAddress, payTo, payAmount, chainId, description, nonce, expiration, expectedUUID }: {
     baseUrl: string;
     tokenAddress: string;
     payTo: string;
     payAmount: string;
     chainId: number;
     description: string;
+    nonce: string;
+    expiration: string;
+    expectedUUID?: string;
 }): string;
 export declare function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paymentsArray, durationSeconds }: {
     chainId: number;

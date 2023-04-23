@@ -317,7 +317,7 @@ function getPayspecExpiresInDelta(delta, timeUnits) {
     return currentTimeSeconds + deltaSeconds;
 }
 exports.getPayspecExpiresInDelta = getPayspecExpiresInDelta;
-function getSmartInvoiceURLWithPaymentsArray({ baseUrl, tokenAddress, paymentsArray, chainId, description }) {
+function getSmartInvoiceURLWithPaymentsArray({ baseUrl, tokenAddress, paymentsArray, chainId, description, nonce, expiration, expectedUUID }) {
     let payToArray = [];
     let payAmountArray = [];
     for (let payment of paymentsArray) {
@@ -330,17 +330,22 @@ function getSmartInvoiceURLWithPaymentsArray({ baseUrl, tokenAddress, paymentsAr
         payTo: JSON.stringify(payToArray),
         payAmount: JSON.stringify(payAmountArray),
         chainId,
-        description
+        description,
+        nonce,
+        expiration,
+        expectedUUID
     });
 }
 exports.getSmartInvoiceURLWithPaymentsArray = getSmartInvoiceURLWithPaymentsArray;
-function getSmartInvoiceURL({ baseUrl, tokenAddress, payTo, payAmount, chainId, description }) {
+function getSmartInvoiceURL({ baseUrl, tokenAddress, payTo, payAmount, chainId, description, nonce, expiration, expectedUUID }) {
     const params = new URLSearchParams({
         payAmount,
         tokenAddress,
         payTo,
         chainId: chainId.toString(),
-        description
+        description,
+        nonce,
+        expiration
     });
     const url = `${baseUrl}?${params.toString()}`;
     console.log(url); // "https://example.com/path/to/resource?color=blue&number=1"

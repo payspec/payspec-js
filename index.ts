@@ -498,14 +498,20 @@ export function getSmartInvoiceURLWithPaymentsArray( {
   tokenAddress,
   paymentsArray, 
   chainId,
-  description
+  description,
+  nonce,
+  expiration,
+  expectedUUID
 }:
   {
   baseUrl:string 
   tokenAddress:string
   paymentsArray:PayspecPaymentElement[] 
   chainId:number
-  description:string 
+  description:string
+  nonce:string
+  expiration:string
+  expectedUUID?: string 
 }  ): string {
 
 
@@ -525,7 +531,10 @@ export function getSmartInvoiceURLWithPaymentsArray( {
     payTo: JSON.stringify(payToArray),
     payAmount: JSON.stringify(payAmountArray),
     chainId,
-    description
+    description,
+    nonce,
+    expiration,
+    expectedUUID
 
   })
 }
@@ -536,7 +545,10 @@ export function getSmartInvoiceURL( {
   payTo,
   payAmount,
   chainId,
-  description
+  description,
+  nonce,
+  expiration,
+  expectedUUID
 }:
   {
   baseUrl:string 
@@ -545,6 +557,9 @@ export function getSmartInvoiceURL( {
   payAmount:string
   chainId:number
   description:string 
+  nonce:string
+  expiration:string
+  expectedUUID?: string 
 }  ): string {
 
   const params = new URLSearchParams({
@@ -553,7 +568,10 @@ export function getSmartInvoiceURL( {
     tokenAddress,
     payTo, 
     chainId: chainId.toString(),
-    description
+    description,
+    nonce,
+    expiration
+    
   });
   
   const url = `${baseUrl}?${params.toString()}`;
