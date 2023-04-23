@@ -369,6 +369,22 @@ export function getCurrencyTokenAddress({
 
 }
 
+
+
+export function encodeInvoice(invoiceData: PayspecInvoice) : string {
+
+  return JSON.stringify(
+    invoiceData
+  )
+}
+
+export function decodeInvoice(invoiceData: string) : PayspecInvoice {
+
+  return JSON.parse(
+    invoiceData
+  )
+}
+
  
 export function validateInvoice(invoiceData: PayspecInvoice): boolean {
 
