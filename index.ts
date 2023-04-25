@@ -510,7 +510,7 @@ export function getSmartInvoiceURLWithPaymentsArray( {
   chainId:number
   description:string
   nonce:string
-  expiration:string
+  expiration:number
   expectedUUID?: string 
 }  ): string {
 
@@ -558,7 +558,7 @@ export function getSmartInvoiceURL( {
   chainId:number
   description:string 
   nonce:string
-  expiration:string
+  expiration:number
   expectedUUID?: string 
 }  ): string {
 

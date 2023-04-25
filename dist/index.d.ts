@@ -1,4 +1,4 @@
-export type APICall = (req: any, res: any) => any;
+export declare type APICall = (req: any, res: any) => any;
 import { Web3Provider } from "@ethersproject/providers";
 export interface ProtocolFeeConfig {
     protocolFeePercentBasisPoints: number;
@@ -56,7 +56,7 @@ export declare function getSmartInvoiceURLWithPaymentsArray({ baseUrl, tokenAddr
     chainId: number;
     description: string;
     nonce: string;
-    expiration: string;
+    expiration: number;
     expectedUUID?: string;
 }): string;
 export declare function getSmartInvoiceURL({ baseUrl, tokenAddress, payTo, payAmount, chainId, description, nonce, expiration, expectedUUID }: {
@@ -67,7 +67,7 @@ export declare function getSmartInvoiceURL({ baseUrl, tokenAddress, payTo, payAm
     chainId: number;
     description: string;
     nonce: string;
-    expiration: string;
+    expiration: number;
     expectedUUID?: string;
 }): string;
 export declare function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paymentsArray, durationSeconds }: {
