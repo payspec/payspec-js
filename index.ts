@@ -569,9 +569,9 @@ export function getSmartInvoiceURL( {
     payTo, 
     chainId: chainId.toString(),
     description,
-    nonce,
-    expiration
-    
+    nonce: nonce.toString(),
+    expiration:expiration.toString()
+
   });
   
   const url = `${baseUrl}?${params.toString()}`;
@@ -581,7 +581,11 @@ export function getSmartInvoiceURL( {
   return url 
 }
 
+/*
 
+this is not deterministic WRT to the uuid ! 
+
+*/
 export function generatePayspecInvoiceSimple( 
   {
     chainId,
@@ -609,6 +613,64 @@ export function generatePayspecInvoiceSimple(
   const ONE_WEEK_SECONDS = 60*60*24*7
 
   const expiresAt = getPayspecExpiresInDelta( durationSeconds ? durationSeconds : ONE_WEEK_SECONDS , 'seconds' )
+
+
+  const {
+      totalAmountDue, 
+      payToArrayStringified, 
+      amountsDueArrayStringified
+  } = getPayspecPaymentDataFromPaymentsArray(paymentsArray)
+
+  const invoice:PayspecInvoice = {
+      payspecContractAddress: payspecContractAddress,
+      description, //can use product id here
+      nonce,
+      token: tokenAddress,
+      chainId: chainId.toString(),
+      payToArrayStringified,
+      amountsDueArrayStringified,
+      expiresAt
+  }
+
+  invoice.invoiceUUID = getPayspecInvoiceUUID(invoice)
+
+  return invoice 
+
+}
+
+
+/*
+This should be deterministic
+*/
+export function generatePayspecInvoice( 
+  {
+    payspecContractAddress,
+    chainId,
+    description,
+    tokenAddress,
+    paymentsArray,
+    expiration,
+    nonce 
+  }:{
+    payspecContractAddress:string 
+    chainId: number,
+    description: string,
+    tokenAddress: string,
+    paymentsArray: PayspecPaymentElement[],
+    expiration?:string,
+    nonce: string 
+
+  }
+
+) : PayspecInvoice{
+
+
+  //const payspecContractAddress = getPayspecContractAddressFromChainId(chainId)
+
+  //const nonce = getPayspecRandomNonce()
+ 
+
+  const expiresAt = expiration
 
 
   const {
