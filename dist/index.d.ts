@@ -77,6 +77,15 @@ export declare function generatePayspecInvoiceSimple({ chainId, description, tok
     paymentsArray: PayspecPaymentElement[];
     durationSeconds?: number;
 }): PayspecInvoice;
+export declare function generatePayspecInvoice({ payspecContractAddress, chainId, description, tokenAddress, paymentsArray, expiration, nonce }: {
+    payspecContractAddress: string;
+    chainId: number;
+    description: string;
+    tokenAddress: string;
+    paymentsArray: PayspecPaymentElement[];
+    expiration: number;
+    nonce: string;
+}): PayspecInvoice;
 export declare function userPayInvoice({ from, invoiceData, provider }: {
     from: string;
     invoiceData: PayspecInvoice;

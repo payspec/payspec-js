@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userPayInvoice = exports.generatePayspecInvoiceSimple = exports.getSmartInvoiceURL = exports.getSmartInvoiceURLWithPaymentsArray = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.decodeInvoice = exports.encodeInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.getTotalAmountDueFromAmountsDueArray = exports.getTotalAmountDueFromPaymentElementsArray = exports.getPaymentElementsFromInvoice = exports.includesProtocolFee = exports.calculateSubtotalLessProtocolFee = exports.applyProtocolFeeToPaymentElements = exports.applyProtocolFee = exports.applyInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractABI = exports.getPayspecContractAddress = exports.getTokenDataFromTokenDictionary = exports.buildTokenDictionary = exports.ETH_ADDRESS = void 0;
+exports.userPayInvoice = exports.generatePayspecInvoice = exports.generatePayspecInvoiceSimple = exports.getSmartInvoiceURL = exports.getSmartInvoiceURLWithPaymentsArray = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.decodeInvoice = exports.encodeInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.getTotalAmountDueFromAmountsDueArray = exports.getTotalAmountDueFromPaymentElementsArray = exports.getPaymentElementsFromInvoice = exports.includesProtocolFee = exports.calculateSubtotalLessProtocolFee = exports.applyProtocolFeeToPaymentElements = exports.applyProtocolFee = exports.applyInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractABI = exports.getPayspecContractAddress = exports.getTokenDataFromTokenDictionary = exports.buildTokenDictionary = exports.ETH_ADDRESS = void 0;
 const ethers_1 = require("ethers");
 const contracts_helper_1 = require("./lib/contracts-helper");
 const contracts_helper_2 = require("./lib/contracts-helper");
@@ -344,14 +344,19 @@ function getSmartInvoiceURL({ baseUrl, tokenAddress, payTo, payAmount, chainId, 
         payTo,
         chainId: chainId.toString(),
         description,
-        nonce,
-        expiration
+        nonce: nonce.toString(),
+        expiration: expiration.toString()
     });
     const url = `${baseUrl}?${params.toString()}`;
     console.log(url); // "https://example.com/path/to/resource?color=blue&number=1"
     return url;
 }
 exports.getSmartInvoiceURL = getSmartInvoiceURL;
+/*
+
+this is not deterministic WRT to the uuid !
+
+*/
 function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paymentsArray, durationSeconds }) {
     const payspecContractAddress = getPayspecContractAddressFromChainId(chainId);
     const nonce = getPayspecRandomNonce();
@@ -372,6 +377,28 @@ function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paym
     return invoice;
 }
 exports.generatePayspecInvoiceSimple = generatePayspecInvoiceSimple;
+/*
+This should be deterministic
+*/
+function generatePayspecInvoice({ payspecContractAddress, chainId, description, tokenAddress, paymentsArray, expiration, nonce }) {
+    //const payspecContractAddress = getPayspecContractAddressFromChainId(chainId)
+    //const nonce = getPayspecRandomNonce()
+    const expiresAt = expiration;
+    const { totalAmountDue, payToArrayStringified, amountsDueArrayStringified } = getPayspecPaymentDataFromPaymentsArray(paymentsArray);
+    const invoice = {
+        payspecContractAddress: payspecContractAddress,
+        description,
+        nonce,
+        token: tokenAddress,
+        chainId: chainId.toString(),
+        payToArrayStringified,
+        amountsDueArrayStringified,
+        expiresAt
+    };
+    invoice.invoiceUUID = getPayspecInvoiceUUID(invoice);
+    return invoice;
+}
+exports.generatePayspecInvoice = generatePayspecInvoice;
 //---------
 function userPayInvoice({ from, invoiceData, provider }) {
     return __awaiter(this, void 0, void 0, function* () {

@@ -657,7 +657,7 @@ export function generatePayspecInvoice(
     description: string,
     tokenAddress: string,
     paymentsArray: PayspecPaymentElement[],
-    expiration?:string,
+    expiration:number,
     nonce: string 
 
   }
@@ -670,7 +670,7 @@ export function generatePayspecInvoice(
   //const nonce = getPayspecRandomNonce()
  
 
-  const expiresAt = expiration
+  const expiresAt:number = expiration
 
 
   const {
