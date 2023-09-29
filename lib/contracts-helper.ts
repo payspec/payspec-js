@@ -24,7 +24,7 @@
 
 
   export function getPayspecContractAddress(networkName: string) : string {
-
+   
     return payspecDeploymentsConfig[networkName].payspec.address
   }
 

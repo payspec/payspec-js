@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "test": "NODE_ENV=test TS_NODE_PROJECT=\"tsconfig.testing.json\" mocha --require ts-node/register 'test/**/*.ts' --timeout 25000",
-    "build": "tsc --declaration && cp -r ./config/ ./dist/"
+    "build": "tsc --declaration && rm -rf ./dist/ && cp -r ./config/ ./dist/"
   },
   "author": "apexmfer",
   "license": "MIT",
