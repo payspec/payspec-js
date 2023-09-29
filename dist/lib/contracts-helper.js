@@ -30,6 +30,8 @@ function getNetworkNameFromChainId(chainId) {
         case 4: return 'rinkeby';
         case 5: return 'goerli';
         case 10: return 'optimism';
+        case 11155111: return 'sepolia';
+        case 8453: return 'base';
         default: return 'unknown';
     }
 }
