@@ -15,6 +15,9 @@ npm install payspec-typescript-library
 ```
 
 
+
+
+
 ### Usage
 
 Here is an example of how to use the getPayspecInvoiceUUID function in JavaScript:
@@ -63,3 +66,9 @@ Returns a string containing the UUID for the invoice, or undefined if there was 
 
 If you find any bugs or have suggestions for how to improve this library, please open an issue or a pull request on GitHub.
 
+
+
+### Publishing 
+
+yarn build 
+yarn publish

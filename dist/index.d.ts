@@ -1,4 +1,4 @@
-export declare type APICall = (req: any, res: any) => any;
+export type APICall = (req: any, res: any) => any;
 import { Web3Provider } from "@ethersproject/providers";
 export interface ProtocolFeeConfig {
     protocolFeePercentBasisPoints: number;

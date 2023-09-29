@@ -9,6 +9,9 @@
     },
     "optimism":{
         "payspec":{"address":"0x5e789dC982EeD11d15657cB942246547E20acA2f"}
+    },
+    "sepolia":{
+        "payspec":{"address":"0xD10b53776dF9d7107Ac71a2bd4d05eA00df19CF4"}
     }
 
 
