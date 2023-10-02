@@ -1,9 +1,9 @@
 {
   "name": "payspec-js",
-  "version": "0.31.0",
+  "version": "0.31.1",
   "description": "Deterministic invoicing and payments for Web3",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts", 
+  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
@@ -26,4 +26,4 @@
     "mocha": "^9.2.2",
     "typescript": "^4.3.4"
   }
-} 
+}
