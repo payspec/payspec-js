@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userPayInvoice = exports.generatePayspecInvoice = exports.generatePayspecInvoiceSimple = exports.getSmartInvoiceURL = exports.getSmartInvoiceURLWithPaymentsArray = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.decodeInvoice = exports.encodeInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.getTotalAmountDueFromAmountsDueArray = exports.getTotalAmountDueFromPaymentElementsArray = exports.getPaymentElementsFromInvoice = exports.includesProtocolFee = exports.calculateSubtotalLessProtocolFee = exports.applyProtocolFeeToPaymentElements = exports.applyProtocolFee = exports.applyInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractABI = exports.getPayspecContractAddress = exports.getTokenDataFromTokenDictionary = exports.buildTokenDictionary = exports.ETH_ADDRESS = void 0;
+exports.userPayInvoice = exports.generatePayspecInvoice = exports.generatePayspecInvoiceSimple = exports.getMetadataHash = exports.getSmartInvoiceURL = exports.getSmartInvoiceURLWithPaymentsArray = exports.getPayspecExpiresInDelta = exports.getPayspecPaymentDataFromPaymentsArray = exports.getPayspecContractAddressFromChainId = exports.validateInvoice = exports.decodeInvoice = exports.encodeInvoice = exports.getCurrencyTokenAddress = exports.parseStringifiedArray = exports.getTotalAmountDueFromAmountsDueArray = exports.getTotalAmountDueFromPaymentElementsArray = exports.getPaymentElementsFromInvoice = exports.includesProtocolFee = exports.calculateSubtotalLessProtocolFee = exports.applyProtocolFeeToPaymentElements = exports.applyProtocolFee = exports.applyInvoiceUUID = exports.getPayspecInvoiceUUID = exports.getPayspecRandomNonce = exports.getPayspecContractABI = exports.getPayspecContractAddress = exports.getTokenDataFromTokenDictionary = exports.buildTokenDictionary = exports.ETH_ADDRESS = void 0;
 const ethers_1 = require("ethers");
 const contracts_helper_1 = require("./lib/contracts-helper");
 const contracts_helper_2 = require("./lib/contracts-helper");
@@ -57,7 +57,7 @@ exports.getPayspecRandomNonce = getPayspecRandomNonce;
 function getPayspecInvoiceUUID(invoiceData) {
     const expiration = Math.floor(parseInt(invoiceData.expiresAt.toString()));
     var payspecContractAddress = { t: 'address', v: invoiceData.payspecContractAddress };
-    var description = { t: 'string', v: invoiceData.description };
+    var metadataHash = { t: 'bytes32', v: invoiceData.metadataHash };
     var nonce = { t: 'uint256', v: ethers_1.BigNumber.from(invoiceData.nonce).toString() };
     var token = { t: 'address', v: invoiceData.token };
     var chainId = { t: 'uint256', v: ethers_1.BigNumber.from(invoiceData.chainId).toString() };
@@ -72,17 +72,18 @@ function getPayspecInvoiceUUID(invoiceData) {
     https://github.com/ethers-io/ethers.js/issues/671
   
     */
-    /* let result =  ethers.utils.solidityKeccak256(
-       payspecContractAddress,
-       description,
-       nonce,
-       token,
-       chainId,
-       payTo,
-       amountsDue,
-       expiresAt
-       );*/
-    const result = ethers_1.ethers.utils.solidityKeccak256(['address', 'string', 'uint256', 'address', 'uint256', 'address[]', 'uint256[]', 'uint256'], [payspecContractAddress.v, description.v, nonce.v, token.v, chainId.v, payTo.v, amountsDue.v, expiresAt.v]);
+    /*
+    
+     function getInvoiceUUID(    address token,   address[] memory payTo, uint[] memory amountsDue,   uint256 nonce,uint256 chainId, bytes32 metadataHash, uint expiresAt  ) public view returns (bytes32 uuid) {
+   
+            address payspecContractAddress = address(this); //prevent from paying through the wrong contract
+   
+            bytes32 newuuid = keccak256( abi.encodePacked(payspecContractAddress, token, payTo, amountsDue,   nonce,  chainId, metadataHash,   expiresAt ) );
+   
+   
+   
+     */
+    const result = ethers_1.ethers.utils.solidityKeccak256(['address', 'address', 'address[]', 'uint256[]', 'uint256', 'uint256', 'bytes32', 'uint256'], [payspecContractAddress.v, token.v, payTo.v, amountsDue.v, nonce.v, chainId.v, metadataHash.v, expiresAt.v]);
     return result ? result : undefined;
 }
 exports.getPayspecInvoiceUUID = getPayspecInvoiceUUID;
@@ -222,7 +223,7 @@ exports.decodeInvoice = decodeInvoice;
 function validateInvoice(invoiceData) {
     const requiredFields = [
         'payspecContractAddress',
-        'description',
+        'metadataHash',
         'nonce',
         'token',
         'chainId',
@@ -317,7 +318,7 @@ function getPayspecExpiresInDelta(delta, timeUnits) {
     return currentTimeSeconds + deltaSeconds;
 }
 exports.getPayspecExpiresInDelta = getPayspecExpiresInDelta;
-function getSmartInvoiceURLWithPaymentsArray({ baseUrl, tokenAddress, paymentsArray, chainId, description, nonce, expiration, expectedUUID }) {
+function getSmartInvoiceURLWithPaymentsArray({ baseUrl, tokenAddress, paymentsArray, chainId, metadata, nonce, expiration, expectedUUID }) {
     let payToArray = [];
     let payAmountArray = [];
     for (let payment of paymentsArray) {
@@ -330,34 +331,44 @@ function getSmartInvoiceURLWithPaymentsArray({ baseUrl, tokenAddress, paymentsAr
         payTo: JSON.stringify(payToArray),
         payAmount: JSON.stringify(payAmountArray),
         chainId,
-        description,
+        metadata,
         nonce,
         expiration,
         expectedUUID
     });
 }
 exports.getSmartInvoiceURLWithPaymentsArray = getSmartInvoiceURLWithPaymentsArray;
-function getSmartInvoiceURL({ baseUrl, tokenAddress, payTo, payAmount, chainId, description, nonce, expiration, expectedUUID }) {
+function getSmartInvoiceURL({ baseUrl, tokenAddress, payTo, payAmount, chainId, metadata, nonce, expiration, expectedUUID }) {
+    const metadataHash = getMetadataHash(metadata); //bytes32 
     const params = new URLSearchParams({
         payAmount,
         tokenAddress,
         payTo,
         chainId: chainId.toString(),
-        description,
         nonce: nonce.toString(),
         expiration: expiration.toString()
     });
+    for (let [key, value] of Object.entries(metadata)) {
+        params.append(key, value);
+    }
     const url = `${baseUrl}?${params.toString()}`;
     console.log(url); // "https://example.com/path/to/resource?color=blue&number=1"
     return url;
 }
 exports.getSmartInvoiceURL = getSmartInvoiceURL;
+function getMetadataHash(metadata) {
+    let metadata_keys = Object.keys(metadata);
+    let metadata_values = Object.values(metadata);
+    const result = ethers_1.ethers.utils.solidityKeccak256(['string[]', 'string[]'], [metadata_keys, metadata_values]);
+    return result;
+}
+exports.getMetadataHash = getMetadataHash;
 /*
 
 this is not deterministic WRT to the uuid !
 
 */
-function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paymentsArray, durationSeconds }) {
+function generatePayspecInvoiceSimple({ chainId, metadataHash, tokenAddress, paymentsArray, durationSeconds }) {
     const payspecContractAddress = getPayspecContractAddressFromChainId(chainId);
     const nonce = getPayspecRandomNonce();
     const ONE_WEEK_SECONDS = 60 * 60 * 24 * 7;
@@ -365,7 +376,7 @@ function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paym
     const { totalAmountDue, payToArrayStringified, amountsDueArrayStringified } = getPayspecPaymentDataFromPaymentsArray(paymentsArray);
     const invoice = {
         payspecContractAddress: payspecContractAddress,
-        description,
+        metadataHash,
         nonce,
         token: tokenAddress,
         chainId: chainId.toString(),
@@ -380,14 +391,14 @@ exports.generatePayspecInvoiceSimple = generatePayspecInvoiceSimple;
 /*
 This should be deterministic
 */
-function generatePayspecInvoice({ payspecContractAddress, chainId, description, tokenAddress, paymentsArray, expiration, nonce }) {
+function generatePayspecInvoice({ payspecContractAddress, chainId, metadataHash, tokenAddress, paymentsArray, expiration, nonce }) {
     //const payspecContractAddress = getPayspecContractAddressFromChainId(chainId)
     //const nonce = getPayspecRandomNonce()
     const expiresAt = expiration;
     const { totalAmountDue, payToArrayStringified, amountsDueArrayStringified } = getPayspecPaymentDataFromPaymentsArray(paymentsArray);
     const invoice = {
         payspecContractAddress: payspecContractAddress,
-        description,
+        metadataHash,
         nonce,
         token: tokenAddress,
         chainId: chainId.toString(),
@@ -406,7 +417,7 @@ function userPayInvoice({ from, invoiceData, provider }) {
         //let networkName = netName? netName : 'mainnet'
         let payspecABI = getPayspecContractABI();
         let payspecContractInstance = new ethers_1.Contract(invoiceData.payspecContractAddress, payspecABI);
-        let description = invoiceData.description;
+        let metadataHash = invoiceData.metadataHash;
         let nonce = ethers_1.BigNumber.from(invoiceData.nonce).toString();
         let token = invoiceData.token;
         let chainId = ethers_1.BigNumber.from(invoiceData.chainId).toString();
@@ -425,14 +436,13 @@ function userPayInvoice({ from, invoiceData, provider }) {
         let totalAmountDueEth = usesEther ? totalAmountDue : '0';
         //calculate value eth -- depends on tokenAddre in invoice data 
         let valueEth = ethers_1.utils.parseUnits(totalAmountDueEth, 'wei').toHexString();
-        let contractInvoiceUUID = yield payspecContractInstance.connect(signer).getInvoiceUUID(description, nonce, token, chainId, payToArray, amountsDueArray, ethBlockExpiresAt);
+        let contractInvoiceUUID = yield payspecContractInstance.connect(signer).getInvoiceUUID(token, payToArray, amountsDueArray, nonce, chainId, metadataHash, ethBlockExpiresAt);
         if (contractInvoiceUUID != invoiceData.invoiceUUID) {
             console.error('contract MISMATCH UUID ', contractInvoiceUUID, invoiceData);
             throw new Error("Mismatching UUID calculated");
         }
         try {
-            let tx = yield payspecContractInstance.connect(signer).createAndPayInvoice(description, nonce, token, chainId, //wei
-            payToArray, amountsDueArray, ethBlockExpiresAt, expectedUUID, { from, value: valueEth });
+            let tx = yield payspecContractInstance.connect(signer).createAndPayInvoice(token, payToArray, amountsDueArray, nonce, chainId, metadataHash, ethBlockExpiresAt, expectedUUID, { from, value: valueEth });
             return { success: true, data: tx };
         }
         catch (err) {

@@ -2,16 +2,16 @@
 
     
     "goerli":{
-        "payspec":{"address":"0x242FC748D08ec2524f15de3f1BCe3A97eFD1133e" }
+        "payspec":{"address":"0x0000000000000000000000000000000000000010" }
     },
     "mainnet":{
         "payspec":{"address":"0x0000000000000000000000000000000000000010" }
     },
     "optimism":{
-        "payspec":{"address":"0x5e789dC982EeD11d15657cB942246547E20acA2f"}
+        "payspec":{"address":"0x0000000000000000000000000000000000000010"}
     },
     "sepolia":{
-        "payspec":{"address":"0xD10b53776dF9d7107Ac71a2bd4d05eA00df19CF4"}
+        "payspec":{"address":"0x62238b3cff9e35ef9f2e17205165ab35b83fb18a"}
     }
 
 

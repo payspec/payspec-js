@@ -6,7 +6,7 @@ export interface ProtocolFeeConfig {
 }
 export interface PayspecInvoice {
     payspecContractAddress: string;
-    description: string;
+    metadataHash: string;
     nonce: string;
     token: string;
     chainId: string;
@@ -49,38 +49,42 @@ export declare function getPayspecPaymentDataFromPaymentsArray(elements: Payspec
     amountsDueArrayStringified: string;
 };
 export declare function getPayspecExpiresInDelta(delta: number, timeUnits?: string): number;
-export declare function getSmartInvoiceURLWithPaymentsArray({ baseUrl, tokenAddress, paymentsArray, chainId, description, nonce, expiration, expectedUUID }: {
+export declare function getSmartInvoiceURLWithPaymentsArray({ baseUrl, tokenAddress, paymentsArray, chainId, metadata, nonce, expiration, expectedUUID }: {
     baseUrl: string;
     tokenAddress: string;
     paymentsArray: PayspecPaymentElement[];
     chainId: number;
-    description: string;
+    metadata: MetadataParams;
     nonce: string;
     expiration: number;
     expectedUUID?: string;
 }): string;
-export declare function getSmartInvoiceURL({ baseUrl, tokenAddress, payTo, payAmount, chainId, description, nonce, expiration, expectedUUID }: {
+export type MetadataParams = {
+    [key: string]: string;
+};
+export declare function getSmartInvoiceURL({ baseUrl, tokenAddress, payTo, payAmount, chainId, metadata, nonce, expiration, expectedUUID }: {
     baseUrl: string;
     tokenAddress: string;
     payTo: string;
     payAmount: string;
     chainId: number;
-    description: string;
+    metadata: MetadataParams;
     nonce: string;
     expiration: number;
     expectedUUID?: string;
 }): string;
-export declare function generatePayspecInvoiceSimple({ chainId, description, tokenAddress, paymentsArray, durationSeconds }: {
+export declare function getMetadataHash(metadata: MetadataParams): String;
+export declare function generatePayspecInvoiceSimple({ chainId, metadataHash, tokenAddress, paymentsArray, durationSeconds }: {
     chainId: number;
-    description: string;
+    metadataHash: string;
     tokenAddress: string;
     paymentsArray: PayspecPaymentElement[];
     durationSeconds?: number;
 }): PayspecInvoice;
-export declare function generatePayspecInvoice({ payspecContractAddress, chainId, description, tokenAddress, paymentsArray, expiration, nonce }: {
+export declare function generatePayspecInvoice({ payspecContractAddress, chainId, metadataHash, tokenAddress, paymentsArray, expiration, nonce }: {
     payspecContractAddress: string;
     chainId: number;
-    description: string;
+    metadataHash: string;
     tokenAddress: string;
     paymentsArray: PayspecPaymentElement[];
     expiration: number;

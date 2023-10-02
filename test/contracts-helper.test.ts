@@ -9,7 +9,7 @@ describe('Contracts Helper', () => {
     it('should getPayspecContractAddress', () => {
 
  
-        let address = getPayspecContractAddress('rinkeby')
+        let address = getPayspecContractAddress('sepolia')
 
         expect(address).to.be.a('string')
 

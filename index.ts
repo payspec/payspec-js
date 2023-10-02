@@ -24,7 +24,7 @@ export interface ProtocolFeeConfig{
 export interface PayspecInvoice {
 
   payspecContractAddress: string,
-  description : string,
+  metadataHash : string, //Bytes32 
   nonce: string, //BigNumber,
   token: string,
   chainId: string, //BigNumber, 
@@ -112,7 +112,7 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
   const expiration = Math.floor(parseInt(invoiceData.expiresAt.toString()))
 
   var payspecContractAddress = {t: 'address', v: invoiceData.payspecContractAddress};
-  var description = {t: 'string', v: invoiceData.description};
+  var metadataHash = {t: 'bytes32', v: invoiceData.metadataHash};
   var nonce = {t: 'uint256', v: BigNumber.from(invoiceData.nonce).toString() } ;
   var token = {t:'address', v: invoiceData.token};
   var chainId = {t: 'uint256', v: BigNumber.from(invoiceData.chainId).toString() };
@@ -132,20 +132,21 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
 
   */
     
- /* let result =  ethers.utils.solidityKeccak256(
-    payspecContractAddress,
-    description, 
-    nonce,
-    token,
-    chainId,
-    payTo,
-    amountsDue, 
-    expiresAt 
-    );*/
+ /* 
+ 
+  function getInvoiceUUID(    address token,   address[] memory payTo, uint[] memory amountsDue,   uint256 nonce,uint256 chainId, bytes32 metadataHash, uint expiresAt  ) public view returns (bytes32 uuid) {
+
+         address payspecContractAddress = address(this); //prevent from paying through the wrong contract
+
+         bytes32 newuuid = keccak256( abi.encodePacked(payspecContractAddress, token, payTo, amountsDue,   nonce,  chainId, metadataHash,   expiresAt ) );
+
+
+
+  */
 
     const result = ethers.utils.solidityKeccak256(
-      ['address', 'string', 'uint256', 'address', 'uint256', 'address[]', 'uint256[]', 'uint256'],
-      [payspecContractAddress.v, description.v, nonce.v, token.v, chainId.v, payTo.v, amountsDue.v, expiresAt.v]
+      ['address', 'address',  'address[]', 'uint256[]',   'uint256',  'uint256', 'bytes32',  'uint256'],
+      [payspecContractAddress.v, token.v,  payTo.v, amountsDue.v, nonce.v, chainId.v, metadataHash.v, expiresAt.v]
     );
 
     return result ? result: undefined
@@ -390,7 +391,7 @@ export function validateInvoice(invoiceData: PayspecInvoice): boolean {
 
   const requiredFields = [
     'payspecContractAddress',
-    'description',
+    'metadataHash',
     'nonce',
     'token',
     'chainId',
@@ -498,7 +499,7 @@ export function getSmartInvoiceURLWithPaymentsArray( {
   tokenAddress,
   paymentsArray, 
   chainId,
-  description,
+  metadata,
   nonce,
   expiration,
   expectedUUID
@@ -508,7 +509,7 @@ export function getSmartInvoiceURLWithPaymentsArray( {
   tokenAddress:string
   paymentsArray:PayspecPaymentElement[] 
   chainId:number
-  description:string
+  metadata:MetadataParams
   nonce:string
   expiration:number
   expectedUUID?: string 
@@ -531,7 +532,7 @@ export function getSmartInvoiceURLWithPaymentsArray( {
     payTo: JSON.stringify(payToArray),
     payAmount: JSON.stringify(payAmountArray),
     chainId,
-    description,
+    metadata,
     nonce,
     expiration,
     expectedUUID
@@ -539,13 +540,18 @@ export function getSmartInvoiceURLWithPaymentsArray( {
   })
 }
 
+
+export type MetadataParams = {
+  [key: string]: string;
+};
+ 
 export function getSmartInvoiceURL( {
   baseUrl,
   tokenAddress,
   payTo,
   payAmount,
   chainId,
-  description,
+  metadata,
   nonce,
   expiration,
   expectedUUID
@@ -556,11 +562,13 @@ export function getSmartInvoiceURL( {
   payTo:string
   payAmount:string
   chainId:number
-  description:string 
+  metadata:MetadataParams 
   nonce:string
   expiration:number
   expectedUUID?: string 
 }  ): string {
+
+  const metadataHash = getMetadataHash(metadata);  //bytes32 
 
   const params = new URLSearchParams({
     
@@ -568,11 +576,16 @@ export function getSmartInvoiceURL( {
     tokenAddress,
     payTo, 
     chainId: chainId.toString(),
-    description,
     nonce: nonce.toString(),
     expiration:expiration.toString()
 
   });
+
+  for (let [key,value] of Object.entries(metadata)){
+
+    params.append(key,value)
+
+  }
   
   const url = `${baseUrl}?${params.toString()}`;
   
@@ -580,6 +593,22 @@ export function getSmartInvoiceURL( {
 
   return url 
 }
+
+
+export function getMetadataHash( metadata: MetadataParams ) : String {
+
+  let metadata_keys = Object.keys(metadata);
+  let metadata_values = Object.values(metadata);
+
+
+  const result = ethers.utils.solidityKeccak256(
+    ['string[]', 'string[]'],
+    [metadata_keys, metadata_values]
+  );
+
+  return result ; 
+}
+
 
 /*
 
@@ -589,14 +618,14 @@ this is not deterministic WRT to the uuid !
 export function generatePayspecInvoiceSimple( 
   {
     chainId,
-    description,
+    metadataHash,
     tokenAddress,
     paymentsArray,
     durationSeconds
   }:{
 
     chainId: number,
-    description: string,
+    metadataHash: string,
     tokenAddress: string,
     paymentsArray: PayspecPaymentElement[],
     durationSeconds?:number
@@ -623,7 +652,7 @@ export function generatePayspecInvoiceSimple(
 
   const invoice:PayspecInvoice = {
       payspecContractAddress: payspecContractAddress,
-      description, //can use product id here
+      metadataHash, //can use product id here
       nonce,
       token: tokenAddress,
       chainId: chainId.toString(),
@@ -646,7 +675,7 @@ export function generatePayspecInvoice(
   {
     payspecContractAddress,
     chainId,
-    description,
+    metadataHash,
     tokenAddress,
     paymentsArray,
     expiration,
@@ -654,7 +683,7 @@ export function generatePayspecInvoice(
   }:{
     payspecContractAddress:string 
     chainId: number,
-    description: string,
+    metadataHash: string,
     tokenAddress: string,
     paymentsArray: PayspecPaymentElement[],
     expiration:number,
@@ -681,7 +710,7 @@ export function generatePayspecInvoice(
 
   const invoice:PayspecInvoice = {
       payspecContractAddress: payspecContractAddress,
-      description, //can use product id here
+      metadataHash, //can use product id here
       nonce,
       token: tokenAddress,
       chainId: chainId.toString(),
@@ -711,7 +740,7 @@ export async function userPayInvoice( {from,invoiceData,provider}:{from:string, 
 
 
 
-  let description = invoiceData.description
+  let metadataHash = invoiceData.metadataHash
   let nonce = BigNumber.from( invoiceData.nonce).toString()
   let token = invoiceData.token
   let chainId = BigNumber.from(invoiceData.chainId).toString()
@@ -745,12 +774,12 @@ export async function userPayInvoice( {from,invoiceData,provider}:{from:string, 
 
 
   let contractInvoiceUUID = await payspecContractInstance.connect(signer).getInvoiceUUID(
-    description,
-    nonce,
     token,
-    chainId, 
     payToArray,
-    amountsDueArray,
+    amountsDueArray, 
+    nonce, 
+    chainId, 
+    metadataHash,
     ethBlockExpiresAt
 
 
@@ -765,12 +794,12 @@ export async function userPayInvoice( {from,invoiceData,provider}:{from:string, 
  
   try{
     let tx = await payspecContractInstance.connect(signer).createAndPayInvoice(
-      description,
-      nonce,
       token,
-      chainId, //wei
       payToArray,
       amountsDueArray,
+      nonce, 
+      chainId,  
+      metadataHash,  
       ethBlockExpiresAt,
       expectedUUID,
       {from,value: valueEth})

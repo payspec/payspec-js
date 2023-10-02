@@ -7,8 +7,8 @@ describe('Payspec Js', () => {
     it('should validate an invoice ', () => {
         let wallet = ethers_1.Wallet.createRandom();
         let mockinvoice = (0, index_1.generatePayspecInvoiceSimple)({
-            chainId: 4,
-            description: 'test',
+            chainId: 11155111,
+            metadataHash: '0x626c756500000000000000000000000000000000000000000000000000000000',
             tokenAddress: '0xb6ed7644c69416d67b522e20bc294a9a9b405b31',
             paymentsArray: [
                 {
@@ -29,8 +29,8 @@ describe('Payspec Js', () => {
     it('should apply protocol fee', () => {
         let wallet = ethers_1.Wallet.createRandom();
         let mockinvoice = (0, index_1.generatePayspecInvoiceSimple)({
-            chainId: 4,
-            description: 'test',
+            chainId: 11155111,
+            metadataHash: '0x626c756500000000000000000000000000000000000000000000000000000000',
             tokenAddress: '0xb6ed7644c69416d67b522e20bc294a9a9b405b31',
             paymentsArray: [
                 {
@@ -48,8 +48,8 @@ describe('Payspec Js', () => {
     it('should apply protocol fee with odd rounding', () => {
         let wallet = ethers_1.Wallet.createRandom();
         let mockinvoice = (0, index_1.generatePayspecInvoiceSimple)({
-            chainId: 4,
-            description: 'test',
+            chainId: 11155111,
+            metadataHash: '0x626c756500000000000000000000000000000000000000000000000000000000',
             tokenAddress: '0xb6ed7644c69416d67b522e20bc294a9a9b405b31',
             paymentsArray: [
                 {
@@ -88,8 +88,8 @@ function test_protocol_fee_application(amountDue) {
     console.log(`test protocol fee application of amountDue ${amountDue}`);
     let wallet = ethers_1.Wallet.createRandom();
     let mockinvoice = (0, index_1.generatePayspecInvoiceSimple)({
-        chainId: 4,
-        description: 'test',
+        chainId: 11155111,
+        metadataHash: '0x626c756500000000000000000000000000000000000000000000000000000000',
         tokenAddress: '0xb6ed7644c69416d67b522e20bc294a9a9b405b31',
         paymentsArray: [
             {
