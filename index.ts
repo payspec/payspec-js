@@ -14,7 +14,7 @@ const PayspecContractABI = require("./config/abi/payspec.abi.json")
  
 const tokenConfig = require(`./config/tokens.json`)
  
-
+export   {getNetworkNameFromChainId}  ; 
 
 export interface ProtocolFeeConfig{
   protocolFeePercentBasisPoints:number,
