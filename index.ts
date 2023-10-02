@@ -597,8 +597,14 @@ export function getSmartInvoiceURL( {
 
 export function getMetadataHash( metadata: MetadataParams ) : String {
 
-  let metadata_keys = Object.keys(metadata);
-  let metadata_values = Object.values(metadata);
+  //sort entries so the order does not matter 
+  const sortedEntries = Object.entries(metadata).sort((a, b) => a[0].localeCompare(b[0]));
+ 
+  const sortedMetadata = Object.fromEntries(sortedEntries);
+
+
+  let metadata_keys = Object.keys(sortedMetadata);
+  let metadata_values = Object.values(sortedMetadata);
 
 
   const result = ethers.utils.solidityKeccak256(

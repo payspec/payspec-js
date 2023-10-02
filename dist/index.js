@@ -357,8 +357,11 @@ function getSmartInvoiceURL({ baseUrl, tokenAddress, payTo, payAmount, chainId, 
 }
 exports.getSmartInvoiceURL = getSmartInvoiceURL;
 function getMetadataHash(metadata) {
-    let metadata_keys = Object.keys(metadata);
-    let metadata_values = Object.values(metadata);
+    //sort entries so the order does not matter 
+    const sortedEntries = Object.entries(metadata).sort((a, b) => a[0].localeCompare(b[0]));
+    const sortedMetadata = Object.fromEntries(sortedEntries);
+    let metadata_keys = Object.keys(sortedMetadata);
+    let metadata_values = Object.values(sortedMetadata);
     const result = ethers_1.ethers.utils.solidityKeccak256(['string[]', 'string[]'], [metadata_keys, metadata_values]);
     return result;
 }
