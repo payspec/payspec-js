@@ -752,7 +752,7 @@ export async function userPayInvoice( {from,invoiceData,provider}:{from:string, 
   let chainId = BigNumber.from(invoiceData.chainId).toString()
   let payToArray = parseStringifiedArray(invoiceData.payToArrayStringified)
   let amountsDueArray = parseStringifiedArray(invoiceData.amountsDueArrayStringified)
-  let ethBlockExpiresAt = invoiceData.expiresAt
+  let expiresAt = invoiceData.expiresAt
   
   let totalAmountDue = getTotalAmountDueFromAmountsDueArray(amountsDueArray)
  
@@ -786,7 +786,7 @@ export async function userPayInvoice( {from,invoiceData,provider}:{from:string, 
     nonce, 
     chainId, 
     metadataHash,
-    ethBlockExpiresAt
+    expiresAt
 
 
   )
@@ -806,7 +806,7 @@ export async function userPayInvoice( {from,invoiceData,provider}:{from:string, 
       nonce, 
       chainId,  
       metadataHash,  
-      ethBlockExpiresAt,
+      expiresAt,
       expectedUUID,
       {from,value: valueEth})
 

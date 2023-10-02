@@ -427,7 +427,7 @@ function userPayInvoice({ from, invoiceData, provider }) {
         let chainId = ethers_1.BigNumber.from(invoiceData.chainId).toString();
         let payToArray = parseStringifiedArray(invoiceData.payToArrayStringified);
         let amountsDueArray = parseStringifiedArray(invoiceData.amountsDueArrayStringified);
-        let ethBlockExpiresAt = invoiceData.expiresAt;
+        let expiresAt = invoiceData.expiresAt;
         let totalAmountDue = getTotalAmountDueFromAmountsDueArray(amountsDueArray);
         let expectedUUID = invoiceData.invoiceUUID;
         let netName = (0, contracts_helper_1.getNetworkNameFromChainId)(parseInt(invoiceData.chainId));
@@ -440,13 +440,13 @@ function userPayInvoice({ from, invoiceData, provider }) {
         let totalAmountDueEth = usesEther ? totalAmountDue : '0';
         //calculate value eth -- depends on tokenAddre in invoice data 
         let valueEth = ethers_1.utils.parseUnits(totalAmountDueEth, 'wei').toHexString();
-        let contractInvoiceUUID = yield payspecContractInstance.connect(signer).getInvoiceUUID(token, payToArray, amountsDueArray, nonce, chainId, metadataHash, ethBlockExpiresAt);
+        let contractInvoiceUUID = yield payspecContractInstance.connect(signer).getInvoiceUUID(token, payToArray, amountsDueArray, nonce, chainId, metadataHash, expiresAt);
         if (contractInvoiceUUID != invoiceData.invoiceUUID) {
             console.error('contract MISMATCH UUID ', contractInvoiceUUID, invoiceData);
             throw new Error("Mismatching UUID calculated");
         }
         try {
-            let tx = yield payspecContractInstance.connect(signer).createAndPayInvoice(token, payToArray, amountsDueArray, nonce, chainId, metadataHash, ethBlockExpiresAt, expectedUUID, { from, value: valueEth });
+            let tx = yield payspecContractInstance.connect(signer).createAndPayInvoice(token, payToArray, amountsDueArray, nonce, chainId, metadataHash, expiresAt, expectedUUID, { from, value: valueEth });
             return { success: true, data: tx };
         }
         catch (err) {
