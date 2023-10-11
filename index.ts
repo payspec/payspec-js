@@ -110,44 +110,46 @@ export function getPayspecInvoiceUUID( invoiceData :PayspecInvoice )
 {
   
   const expiration = Math.floor(parseInt(invoiceData.expiresAt.toString()))
+  
+  const payToArray = JSON.parse(invoiceData.payToArrayStringified)
+  const amountsDueArray = JSON.parse(invoiceData.amountsDueArrayStringified)
+
+
 
   var payspecContractAddress = {t: 'address', v: invoiceData.payspecContractAddress};
-  var metadataHash = {t: 'bytes32', v: invoiceData.metadataHash};
-  var nonce = {t: 'uint256', v: BigNumber.from(invoiceData.nonce).toString() } ;
+ 
+ 
   var token = {t:'address', v: invoiceData.token};
-  var chainId = {t: 'uint256', v: BigNumber.from(invoiceData.chainId).toString() };
   
-  let payToArray = JSON.parse(invoiceData.payToArrayStringified)
-  let amountsDueArray = JSON.parse(invoiceData.amountsDueArrayStringified)
-
   var payTo = {t: 'address[]' , v:payToArray}
   var amountsDue = {t: 'uint[]' , v:amountsDueArray}
-  var expiresAt = {t:'uint', v: expiration};
 
-  
-  /*
-  test!!
+  var nonce = {t: 'uint256', v: BigNumber.from(invoiceData.nonce).toString() } ;
+  var chainId = {t: 'uint256', v: BigNumber.from(invoiceData.chainId).toString() };
 
-  https://github.com/ethers-io/ethers.js/issues/671
+  var metadataHash = {t: 'bytes32', v: invoiceData.metadataHash};
+  var expiresAt = {t:'uint256', v: expiration};
 
-  */
-    
- /* 
- 
-  function getInvoiceUUID(    address token,   address[] memory payTo, uint[] memory amountsDue,   uint256 nonce,uint256 chainId, bytes32 metadataHash, uint expiresAt  ) public view returns (bytes32 uuid) {
-
-         address payspecContractAddress = address(this); //prevent from paying through the wrong contract
-
-         bytes32 newuuid = keccak256( abi.encodePacked(payspecContractAddress, token, payTo, amountsDue,   nonce,  chainId, metadataHash,   expiresAt ) );
-
-
-
-  */
-
+   
+/*
+//old way - used encode packed 
     const result = ethers.utils.solidityKeccak256(
       ['address', 'address',  'address[]', 'uint256[]',   'uint256',  'uint256', 'bytes32',  'uint256'],
       [payspecContractAddress.v, token.v,  payTo.v, amountsDue.v, nonce.v, chainId.v, metadataHash.v, expiresAt.v]
     );
+*/
+
+
+  const abi = ethers.utils.defaultAbiCoder;
+  const params = abi.encode(
+    ['address', 'address',  'address[]', 'uint256[]',   'uint256',  'uint256', 'bytes32',  'uint256'],
+    [payspecContractAddress.v, token.v,  payTo.v, amountsDue.v, nonce.v, chainId.v, metadataHash.v, expiresAt.v]
+  ); // array to encode
+
+  const result = ethers.utils.keccak256(params);
+  
+
+
 
     return result ? result: undefined
 } 
@@ -597,22 +599,37 @@ export function getSmartInvoiceURL( {
 
 export function getMetadataHash( metadata: MetadataParams ) : String {
 
-  //sort entries so the order does not matter 
-  const sortedEntries = Object.entries(metadata).sort((a, b) => a[0].localeCompare(b[0]));
  
-  const sortedMetadata = Object.fromEntries(sortedEntries);
 
+  let sortedEntries = Object.entries(metadata).sort((a, b) =>
+  a[0].localeCompare(b[0])
+); // Sorting by key
 
-  let metadata_keys = Object.keys(sortedMetadata);
-  let metadata_values = Object.values(sortedMetadata);
+let metadata_keys = [];
+let metadata_values = [];
 
+console.log({ sortedEntries });
 
-  const result = ethers.utils.solidityKeccak256(
-    ['string[]', 'string[]'],
-    [metadata_keys, metadata_values]
-  );
+for (let [key, value] of sortedEntries) {
+  if (typeof key != "undefined" && typeof value != "undefined") {
+    console.log("metadata hash gen {} {} ", key, value);
 
-  return result ; 
+    metadata_keys.push(key);
+    metadata_values.push(value);
+  }
+}
+
+const abi = ethers.utils.defaultAbiCoder;
+const params = abi.encode(
+  ["string[]", "string[]"],
+  [metadata_keys, metadata_values]
+); // array to encode
+
+const result = ethers.utils.keccak256(params);
+ 
+
+return result;
+
 }
 
 
