@@ -1,6 +1,6 @@
 {
   "name": "payspec-js",
-  "version": "0.32.0",
+  "version": "0.32.1",
   "description": "Deterministic invoicing and payments for Web3",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
