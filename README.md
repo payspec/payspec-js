@@ -76,21 +76,21 @@ console.log({generatedInvoice}); //will have deterministic invoice uuid inside w
 
 ## API
 
-### `getPayspecInvoiceUUID(invoiceData: PayspecInvoice): string | undefined`
+### `getPayspecInvoiceUUID(invoiceData: PayspecInvoice) 
 
 Generates a Universally Unique Identifier (UUID) for a Payspec invoice.
 
 #### Parameters
 
 - **invoiceData**: An object containing
-  - `payspecContractAddress`: The address of the Payspec contract on the Ethereum blockchain.
-  - `description`: A description of the invoice.
-  - `nonce`: A random number used to prevent replay attacks.
+  - `payspecContractAddress`: The address of the Payspec contract on the Ethereum network you are using.
+  - `metadataHash`: A hash of optional metadata such as order description, product name, anything.
+  - `nonce`: A random number used to prevent uuid collisions.
   - `token`: The address of the token used to pay the invoice (or Ether address for Ether payments).
   - `totalAmountDue`: The total amount due for the invoice, in Wei or token units.
   - `payToArrayStringified`: A JSON stringified array of Ethereum addresses that will receive payment.
-  - `amountsDueArrayStringified`: A JSON stringified array of amounts due to each payee, in Wei or token units.
-  - `expiresAt`: The timestamp (in seconds) after which the invoice will expire.
+  - `amountsDueArrayStringified`: A JSON stringified array of amounts due to each payee respectively in order, in wei or raw token units.
+  - `expiresAt`: The timestamp (in utc unix seconds) after which the invoice will expire and will not be able to be paid.
 
 #### Returns
 
@@ -111,7 +111,7 @@ yarn publish
 
 ## Smart Contract Snippet (Solidity)
 
-Here's a quick look at the Solidity smart contract that powers Payspec:
+Here's a quick look into the Solidity smart contract that powers Payspec:
 
 ```solidity
 struct Invoice {
@@ -126,6 +126,68 @@ struct Invoice {
   uint256 paidAt; 
   uint256 expiresAt;
 }
+
+
+
+
+  function createAndPayInvoice( address token, address[] memory payTo, uint[] memory amountsDue,   uint256 nonce,   uint256 chainId, bytes32 metadataHash,uint256 expiresAt, bytes32 expecteduuid  ) 
+    public 
+    payable 
+    nonReentrant
+    returns (bool) {
+
+     uint256 totalAmountDue = calculateTotalAmountDue(amountsDue);
+     
+     if(token == ETHER_ADDRESS){
+       require(msg.value == totalAmountDue, "Transaction sent incorrect ETH amount.");
+     }else{
+       require(msg.value == 0, "Transaction sent ETH for an ERC20 invoice.");
+     }
+     
+     bytes32 newuuid = _createInvoice(token,payTo,amountsDue, nonce, chainId, metadataHash, expiresAt,expecteduuid);
+    
+     return _payInvoice(newuuid);
+  }
+
+   function _createInvoice(  address token, address[] memory payTo, uint[] memory amountsDue, uint256 nonce, uint256 chainId, bytes32 metadataHash,  uint256 expiresAt, bytes32 expecteduuid ) 
+    internal 
+    returns (bytes32 uuid) { 
+
+
+      bytes32 newuuid = getInvoiceUUID(token, payTo, amountsDue, nonce,  chainId, metadataHash, expiresAt ) ;
+
+      require(!lockedByOwner);
+      require( newuuid == expecteduuid , "Invalid invoice uuid");
+      require( invoices[newuuid].uuid == 0 );  //make sure you do not overwrite invoices
+      require(payTo.length == amountsDue.length, "Invalid number of amounts due");
+
+      //require(ethBlockExpiresAt == 0 || block.number < expiresAt);
+
+      invoices[newuuid] = Invoice({
+       uuid:newuuid,
+       metadataHash:metadataHash,
+       nonce: nonce,
+       token: token,
+
+       chainId: chainId,
+
+       payTo: payTo,
+       amountsDue: amountsDue,
+       
+       paidBy: address(0),
+        
+       paidAt: 0,
+       expiresAt: expiresAt 
+      });
+
+
+       emit CreatedInvoice(newuuid, metadataHash);
+
+       return newuuid;
+   }
+
+
+
 ```
 
 For complete details, please refer to the [source code](https://github.com/your-username/payspec-js/tree/main/contracts).
