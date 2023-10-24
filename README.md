@@ -123,7 +123,8 @@ struct Invoice {
   address paidBy;
   uint256 paidAt; 
   uint256 expiresAt;
-} 
+}
+```
 
 For complete details, please refer to the [source code](https://github.com/your-username/payspec-js/tree/main/contracts).
 
