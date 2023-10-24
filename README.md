@@ -2,6 +2,8 @@
  
 Payspec is a free, open-source payments processor library that runs on the Ethereum blockchain. This robust library is engineered to enable deterministic invoicing and one-time user payments for ecommerce platforms. It employs a smart contract written in Solidity for effective payment facilitation.
 
+[Payspec Smart Contract on Etherscan](https://etherscan.io/address/0xef0Cb5Ba8947d374e3af4553218937a15eE19D08#code)
+
 ## Features
 
 - 🚀 Supports deterministic invoicing
