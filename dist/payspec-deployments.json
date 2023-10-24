@@ -1,0 +1,18 @@
+{
+
+    
+    "goerli":{
+        "payspec":{"address":"0x0000000000000000000000000000000000000010" }
+    },
+    "mainnet":{
+        "payspec":{"address":"0xef0Cb5Ba8947d374e3af4553218937a15eE19D08" }
+    },
+    "optimism":{
+        "payspec":{"address":"0x0000000000000000000000000000000000000010"}
+    },
+    "sepolia":{
+        "payspec":{"address":"0x365f2dE18625085733286AeDb20c3EE489eEcBC2"}
+    }
+
+
+}
