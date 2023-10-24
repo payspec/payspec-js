@@ -190,7 +190,7 @@ struct Invoice {
 
 ```
 
-For complete details, please refer to the [source code](https://github.com/your-username/payspec-js/tree/main/contracts).
+For complete details, please refer to the [source code](https://github.com/payspec/payspec-js/tree/main/contracts).
 
 ## License
 
